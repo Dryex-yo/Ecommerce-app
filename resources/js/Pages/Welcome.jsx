@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { UserIcon } from '@heroicons/react/24/solid';
 import { Link, Head, router, usePage } from '@inertiajs/react'; // Tambah usePage
 import { 
     ShoppingCart, Package, Search, LogOut, 
@@ -30,7 +31,7 @@ export default function Welcome({ auth, products }) {
 
     return (
         <>
-            <Head title={`Welcome to ${shopName} | Premium Store`} />
+            <Head title={`Welcome to ${shopName}`} />
             
             <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900">
                 {/* --- TOP PROMO BAR --- */}
@@ -44,7 +45,8 @@ export default function Welcome({ auth, products }) {
                         <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100 group-hover:scale-110 transition-transform overflow-hidden">                            <ShoppingCart size={20} strokeWidth={2.5} />
                         {settings?.shop_logo ? (
                                         <img 
-                                            src={`/storage/${settings.shop_logo}`} 
+                                            key={settings.shop_logo}
+                                            src={settings.shop_logo} 
                                             alt="Logo" 
                                             className="w-full h-full object-cover"
                                         />
