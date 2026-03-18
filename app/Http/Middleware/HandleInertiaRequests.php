@@ -43,14 +43,14 @@ class HandleInertiaRequests extends Middleware
                     // 1. Ambil semua data dari database
                     $dbSettings = \App\Models\Setting::pluck('value', 'key')->toArray();
                     
-                    // 2. Olah URL logo secara terpisah
                     $logoPath = $dbSettings['shop_logo'] ?? null;
                     $finalLogo = $logoPath ? asset('storage/' . $logoPath) : null;
 
                     // 3. Gabungkan semua, tapi pastikan shop_logo menggunakan $finalLogo (URL lengkap)
                     return array_merge([
-                        'shop_name' => 'DRYEX SHOP',
-                        'shop_email' => 'admin@dryex.com',
+                        'shop_name' => Setting::get('shop_name'),
+                        'shop_email' => Setting::get('shop_email'),
+                        'shop_address' => Setting::get('shop_address'),
                     ], $dbSettings, [
                         'shop_logo' => $finalLogo // Ini akan menimpa data mentah di $dbSettings
                     ]);
