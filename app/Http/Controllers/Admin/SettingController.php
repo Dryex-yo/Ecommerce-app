@@ -32,7 +32,7 @@ class SettingController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi dasar (optional tapi disarankan)
+        // 1. Validasi
         $data = $request->validate([
             'shop_name'    => 'nullable|string|max:255',
             'shop_email'   => 'nullable|email',
@@ -44,23 +44,23 @@ class SettingController extends Controller
             'shop_address' => 'nullable|string',
         ]);
 
+        // 2. Handle Logo secara terpisah
         if ($request->hasFile('shop_logo')) {
-            
-        // Simpan logo baru ke folder 'settings' di storage/public
-        $path = $request->file('shop_logo')->store('settings', 'public');
-        
-        // Simpan path ke database
-        Setting::updateOrCreate(['key' => 'shop_logo'], ['value' => $path]);
+            $path = $request->file('shop_logo')->store('settings', 'public');
+            Setting::updateOrCreate(['key' => 'shop_logo'], ['value' => $path]);
         }
 
-        // Simpan setiap key ke database
+        // 3. Hapus shop_logo dari array $data agar tidak ikut masuk ke loop
+        unset($data['shop_logo']);
+
+        // 4. Simpan semua data lainnya
         foreach ($data as $key => $value) {
-            // Kita konversi boolean atau null ke string agar konsisten di database
+            // Konversi boolean ke string '1' atau '0'
             $finalValue = is_bool($value) ? ($value ? '1' : '0') : $value;
-            
+
             Setting::updateOrCreate(
-                ['key' => $key],
-                ['value' => $finalValue ?? '']
+                ['key' => $key], // Gunakan variabel $key dari loop
+                ['value' => $finalValue] // Gunakan nilai asli dari input
             );
         }
 

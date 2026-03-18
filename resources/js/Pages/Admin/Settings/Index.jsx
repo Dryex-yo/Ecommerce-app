@@ -32,7 +32,15 @@ export default function Index({ auth, settings }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('settings.store'));
+        
+        // Gunakan forceFormData: true jika dirasa file tidak terkirim
+        post(route('settings.store'), {
+            forceFormData: true,
+            onSuccess: () => {
+                // Bersihkan preview setelah berhasil
+                setData('shop_logo_preview', null);
+            },
+        });
     };
 
     return (
@@ -86,33 +94,56 @@ export default function Index({ auth, settings }) {
                                     </div>
                                 </div>
 
-                                {/* Input LOgo*/}
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Shop Logo</label>
-                                    <div className="flex items-center gap-5">
-                                        {/* Preview Logo Saat Ini */}
-                                        <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50">
-                                            {data.shop_logo_preview || settings.shop_logo ? (
-                                                <img 
-                                                    src={data.shop_logo_preview || settings.shop_logo} 
-                                                    className="w-full h-full object-contain"
-                                                />
-                                            ) : (
-                                                <Image className="text-slate-300" size={32} />
-                                            )}
+                                {/* Input Logo */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Shop Logo</label>
+                                    <div className="flex items-center gap-6 p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                                        {/* Preview Container */}
+                                        <div className="relative group">
+                                            <div className="w-24 h-24 rounded-2xl border-2 border-white shadow-sm flex items-center justify-center overflow-hidden bg-white">
+                                                {data.shop_logo_preview || settings.shop_logo ? (
+                                                    <img 
+                                                        src={data.shop_logo_preview || settings.shop_logo} 
+                                                        className="w-full h-full object-contain"
+                                                        alt="Shop Logo"
+                                                    />
+                                                ) : (
+                                                    <Image className="text-slate-200" size={40} />
+                                                )}
+                                            </div>
                                         </div>
-                                        
-                                        {/* Input File */}
-                                        <input 
-                                            type="file" 
-                                            onChange={(e) => {
-                                                const file = e.target.files[0];
-                                                setData('shop_logo', file);
-                                                // Create preview URL
-                                                setData('shop_logo_preview', URL.createObjectURL(file));
-                                            }}
-                                            className="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
-                                        />
+
+                                        <div className="flex-1 space-y-3">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-sm font-bold text-slate-700">Ganti Logo Toko</span>
+                                                <p className="text-[11px] text-slate-400 font-medium">Format: JPG, PNG, atau SVG. Maksimal 2MB.</p>
+                                            </div>
+                                            
+                                            <input 
+                                                type="file" 
+                                                id="shop_logo"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        setData(prev => ({
+                                                            ...prev,
+                                                            shop_logo: file,
+                                                            shop_logo_preview: URL.createObjectURL(file)
+                                                        }));
+                                                    }
+                                                }}
+                                                className="hidden"
+                                            />
+                                            
+                                            <label 
+                                                htmlFor="shop_logo"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-50 hover:border-slate-300 cursor-pointer transition-all"
+                                            >
+                                                <Image size={14} />
+                                                PILIH GAMBAR
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 

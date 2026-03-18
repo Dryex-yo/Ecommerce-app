@@ -20,8 +20,9 @@ import axios from 'axios';
 
 
 export default function AdminLayout({ children, user }) {
-    const { props } = usePage();
-    const { notifications, app_settings } = props;
+    // Destructuring sekaligus dari usePage
+    const { notifications, settings } = usePage().props;
+    const logoUrl = settings?.shop_logo || '/default-logo.png';
     
     // State untuk Search
     const [searchTerm, setSearchTerm] = useState('');
@@ -36,7 +37,7 @@ export default function AdminLayout({ children, user }) {
     // Logic untuk Global Search
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
-            if (searchTerm.length > 2) {
+            if (searchTerm.trim().length > 2) {
                 setIsSearching(true);
                 axios.get(route('api.search', { q: searchTerm }))
                     .then(res => {
@@ -73,12 +74,24 @@ export default function AdminLayout({ children, user }) {
             {/* --- SIDEBAR --- */}
             <aside className="w-64 bg-white/70 backdrop-blur-xl rounded-[2.5rem] p-8 shadow-sm flex flex-col border border-white/50 fixed h-[calc(100vh-3rem)] z-40">
                 <div className="flex items-center gap-3 mb-12">
-                    <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                        <LayoutGrid size={22} strokeWidth={2.5} />
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden shadow-lg">
+                        {settings?.shop_logo ? (
+                            <img 
+                                src={settings.shop_logo ? `/storage/${settings.shop_logo}` : '/default-logo.png'}
+                                alt="Logo" 
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                    e.target.onerror = null; 
+                                    e.target.src = "/733bK7DRkO6lc7T7qAiQQSt6uSo21LuP27zdexlf.png"; // sediakan gambar cadangan jika link mati
+                                }}
+                            />
+                        ) : (
+                            <LayoutGrid className="text-blue-600" />
+                        )}
                     </div>
                     <div>
                         <h1 className="font-bold text-lg leading-none uppercase truncate w-32">
-                            {app_settings?.shop_name || 'DRYEX SHOP'}
+                        <span>{settings.shop_name}</span>
                         </h1>
                         <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">Admin Panel</p>
                     </div>
