@@ -32,8 +32,8 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048', // Foto Utama
-            'gallery.*' => 'image|mimes:jpg,jpeg,png|max:2048'      // Array Galeri
+            'image' => 'required|image|mimes:jpg,jpeg,png|max:5120', // Foto Utama
+            'gallery.*' => 'image|mimes:jpg,jpeg,png|max:5120'      // Array Galeri
         ]);
 
         // 1. Simpan Foto Utama (Thumbnail)
@@ -76,32 +76,59 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:6000',
+            'gallery.*' => 'image|mimes:jpg,jpeg,png|max:6000'
         ]);
+
+        $data = [
+        'name' => $request->name,
+        'category' => $request->category,
+        'price' => $request->price,
+        'stock' => $request->stock,
+        'description' => $request->description,
+        ];
 
         // Update slug jika nama berubah
         if ($request->name !== $product->name) {
-            $validated['slug'] = Str::slug($request->name) . '-' . rand(1000, 9999);
+            $data['slug'] = Str::slug($request->name) . '-' . rand(1000, 9999);
         }
 
         // Cek jika ada foto utama baru
         if ($request->hasFile('image')) {
-            $request->validate(['image' => 'image|mimes:jpg,jpeg,png|max:2048']);
+            $request->validate(['image' => 'image|mimes:jpg,jpeg,png|max:6000']);
             
             // Hapus foto lama jika ada
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-            $validated['image'] = $request->file('image')->store('products/thumbnails', 'public');
+            $data['image'] = $request->file('image')->store('products/thumbnails', 'public');
         }
 
-        $product->update($validated);
+        $product->update($data);
 
+        if ($request->hasFile('gallery')) {
+        // OPSIONAL: Hapus galeri lama jika Anda ingin mengganti SEMUA foto galeri
+        // Jika Anda ingin menambah (bukan mengganti), hapus bagian foreach & delete() di bawah ini
+        foreach ($product->images as $oldGalleryImage) {
+            Storage::disk('public')->delete($oldGalleryImage->image_path);
+        }
+        $product->images()->delete(); // Hapus record di database product_images
+
+        // Simpan foto galeri yang baru (maksimal 10)
+        $galleryFiles = $request->file('gallery');
+        foreach (array_slice($galleryFiles, 0, 10) as $file) {
+            $path = $file->store('products/gallery', 'public');
+            $product->images()->create([
+                'image_path' => $path
+                ]);
+            }
+        }
         return redirect()->route('products.index')->with('message', 'Produk diperbarui!');
     }
 
@@ -131,4 +158,18 @@ class ProductController extends Controller
             return redirect()->back()->with('error', 'Gagal menghapus produk: ' . $e->getMessage());
         }
     }
+
+    public function destroyImage($id)
+    {
+        $image = \App\Models\ProductImage::findOrFail($id);
+        
+        // Hapus file fisik
+        if (Storage::disk('public')->exists($image->image_path)) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+        
+        $image->delete();
+
+        return redirect()->back()->with('message', 'Foto galeri berhasil dihapus');
+    }   
 }

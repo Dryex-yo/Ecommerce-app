@@ -55,6 +55,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     // CRUD Products
     Route::resource('products', ProductController::class);
+    Route::delete('/product-images/{id}', [ProductController::class, 'destroyImage'])->name('product-images.destroy');
     Route::get('/api/search', [GlobalSearchController::class, 'search'])->name('api.search');
     
     // Order Management
