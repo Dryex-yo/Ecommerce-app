@@ -130,6 +130,7 @@ export default function Dashboard({ auth, stats, latestProducts, recentOrders, m
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
                 {/* RECENT ORDERS TABLE */}
                 <div className="lg:col-span-2 bg-white rounded-[3rem] p-8 shadow-sm border border-slate-50">
                     <div className="flex justify-between items-center mb-8">
