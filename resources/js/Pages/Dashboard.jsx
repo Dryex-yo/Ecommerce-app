@@ -130,7 +130,7 @@ export default function Dashboard({ auth, stats, latestProducts, recentOrders, m
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 {/* RECENT ORDERS TABLE */}
                 <div className="lg:col-span-2 bg-white rounded-[3rem] p-8 shadow-sm border border-slate-50">
                     <div className="flex justify-between items-center mb-8">
@@ -140,7 +140,7 @@ export default function Dashboard({ auth, stats, latestProducts, recentOrders, m
                             </div>
                             Recent Transactions
                         </h3>
-                        <Link href="/orders" className="text-xs font-black text-blue-600 hover:underline">VIEW ALL</Link>
+                        <Link href={route('orders.index')} className="text-xs font-black text-blue-600 hover:underline">VIEW ALL</Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
@@ -153,77 +153,126 @@ export default function Dashboard({ auth, stats, latestProducts, recentOrders, m
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
-                                {recentOrders?.map((order) => (
-                                    <tr key={order.id} className="group hover:bg-slate-50/50 transition-all">
-                                        <td className="py-5 pl-2">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-black text-slate-500 uppercase">
-                                                    {order.user?.name.charAt(0) || 'G'}
+                                {recentOrders?.map((order) => {
+                                    // Konfigurasi warna status agar lebih variatif
+                                    const statusConfig = {
+                                        completed: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                        pending: 'bg-amber-50 text-amber-600 border-amber-100',
+                                        shipped: 'bg-blue-50 text-blue-600 border-blue-100',
+                                        cancelled: 'bg-rose-50 text-rose-600 border-rose-100',
+                                    };
+
+                                    return (
+                                        <tr key={order.id} className="group hover:bg-slate-50/50 transition-all">
+                                            <td className="py-5 pl-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-[11px] font-black text-slate-500 uppercase border border-slate-200 shadow-sm">
+                                                        {order.user?.name.charAt(0) || 'G'}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-black text-slate-800 leading-none">{order.user?.name || 'Guest'}</p>
+                                                        <p className="text-[10px] text-slate-400 mt-1.5 font-bold tracking-tight">#ORD-{order.id}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-800 leading-none">{order.user?.name || 'Guest'}</p>
-                                                    <p className="text-[10px] text-slate-400 mt-1 font-bold tracking-tight">#ORD-{order.id}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-5 font-black text-slate-700 text-sm">
-                                            {formatIDR(order.total_price)}
-                                        </td>
-                                        <td className="py-5">
-                                            <span className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider ${
-                                                order.status === 'completed' 
-                                                ? 'bg-emerald-50 text-emerald-600' 
-                                                : 'bg-amber-50 text-amber-600'
-                                            }`}>
-                                                {order.status}
-                                            </span>
-                                        </td>
-                                        <td className="py-5 text-[11px] text-slate-400 font-bold uppercase">
-                                            {new Date(order.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
+                                            </td>
+                                            <td className="py-5 font-black text-slate-800 text-sm">
+                                                {formatIDR(order.total_price)}
+                                            </td>
+                                            <td className="py-5">
+                                                <span className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border ${statusConfig[order.status] || statusConfig.pending}`}>
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-5 text-[11px] text-slate-400 font-bold uppercase">
+                                                {new Date(order.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
+                                            </td>
+                                            {/* Tombol Aksi Cepat */}
+                                            <td className="py-5 text-right pr-2">
+                                                <Link 
+                                                    href={`/orders/${order.id}`} 
+                                                    className="p-2.5 bg-slate-100 text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all inline-flex shadow-sm"
+                                                >
+                                                    <ChevronRight size={14} strokeWidth={3} />
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>                        
                         </table>
                     </div>
                 </div>
 
-                {/* RECENT PRODUCTS */}
-                <div className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-50">
-                    <h3 className="font-black text-xl mb-8 text-slate-800">New Collection</h3>
-                    <div className="space-y-6">
+                {/* INVENTORY MONITOR SECTION */}
+                <div className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-50 flex flex-col h-full">
+                    <div className="flex justify-between items-start mb-8">
+                        <div>
+                            <h3 className="font-black text-xl text-slate-800">Inventory Monitor</h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Stock Levels & Pricing</p>
+                        </div>
+                        <div className="bg-blue-50 text-blue-600 p-2 rounded-xl">
+                            <Package size={20} />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 flex-grow">
                         {latestProducts && latestProducts.length > 0 ? (
                             latestProducts.map((product) => (
-                                <div key={product.id} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50/80 p-3 rounded-[1.5rem] transition-all border border-transparent hover:border-slate-100">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                                <Link 
+                                    key={product.id} 
+                                    href={route('products.show', product.id)} // <--- INI KUNCINYA: Link navigasi
+                                    className="group block p-4 rounded-[2rem] transition-all border border-slate-50 hover:border-blue-100 hover:bg-blue-50/20 bg-slate-50/30 mb-3 shadow-sm hover:shadow-md cursor-pointer"
+                                >
+                                    {/* Baris Atas: Gambar & Info Nama */}
+                                    <div className="flex items-center gap-4 mb-3">
+                                        <div className="w-12 h-12 bg-white rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm group-hover:scale-105 transition-transform">
                                             {product.image ? (
-                                                <img src={`/storage/${product.image}`} className="w-full h-full object-cover rounded-2xl" />
-                                            ) : <Package size={20} />}
+                                                <img src={`/storage/${product.image}`} className="w-full h-full object-cover" alt={product.name} />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-slate-200 bg-slate-50">
+                                                    <Package size={18} />
+                                                </div>
+                                            )}
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-black text-slate-800 truncate w-28 group-hover:text-blue-600 transition-colors">{product.name}</p>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <span className={`w-1.5 h-1.5 rounded-full ${product.stock > 5 ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Stock: {product.stock}</p>
-                                            </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-black text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                                                {product.name}
+                                            </p>
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
+                                                {product.category?.name || 'General'}
+                                            </p>
                                         </div>
                                     </div>
-                                    <p className="text-sm font-black text-slate-700">
-                                        {formatIDR(product.price).replace('Rp', '').trim()}
-                                    </p>
-                                </div>
+
+                                    {/* Baris Bawah: Status Stok & Harga */}
+                                    <div className="flex items-center justify-between pt-3 border-t border-slate-100/50">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`w-2 h-2 rounded-full ${
+                                                product.stock > 10 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-rose-500'
+                                            }`}></span>
+                                            <span className="text-[10px] font-black text-slate-600 uppercase">
+                                                {product.stock} Units
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="text-right">
+                                            <span className="text-[11px] font-black text-blue-600 px-3 py-1 bg-white rounded-xl shadow-sm border border-blue-50">
+                                                {formatIDR(product.price).replace('Rp', '').trim()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Link>                         
                             ))
                         ) : (
-                            <div className="text-center py-10 flex flex-col items-center">
+                            <div className="text-center py-10 flex flex-col items-center justify-center h-full">
                                 <Package className="text-slate-100 mb-2" size={60} />
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Invetory Empty</p>
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No Products Found</p>
                             </div>
                         )}
                     </div>
                     
-                    <Link href={route('products.index')} className="w-full mt-10 py-5 rounded-[1.5rem] border-2 border-dashed border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/50 transition-all flex justify-center items-center gap-3">
-                        Manage Inventory <ArrowUpRight size={16}/>
+                    <Link href={route('products.index')} className="w-full mt-8 py-4 rounded-[1.5rem] bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 transition-all flex justify-center items-center gap-3 shadow-lg shadow-slate-200">
+                        Inventory Management <ArrowUpRight size={16}/>
                     </Link>
                 </div>
             </div>

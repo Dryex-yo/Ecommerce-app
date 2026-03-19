@@ -30,24 +30,37 @@ class CartController extends Controller
             return redirect()->route('login');
         }
 
-        // Cari apakah produk sudah ada di keranjang user ini
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $product = Product::findOrFail($request->product_id);
+
+        // 1. Cek apakah stok cukup untuk jumlah yang diminta
+        if ($product->stock < $request->quantity) {
+            return redirect()->back()->with('error', 'Maaf, stok tidak mencukupi.');
+        }
+
         $cart = Cart::where('user_id', Auth::id())
                     ->where('product_id', $request->product_id)
                     ->first();
 
         if ($cart) {
-            // Jika ada, tambah jumlahnya
-            $cart->increment('quantity');
+            // 2. Cek lagi jika ditambah apakah melampaui stok?
+            if (($cart->quantity + $request->quantity) > $product->stock) {
+                return redirect()->back()->with('error', 'Total di keranjang melampaui stok tersedia.');
+            }
+            $cart->increment('quantity', $request->quantity);
         } else {
-            // Jika belum ada, buat baru
             Cart::create([
                 'user_id' => Auth::id(),
                 'product_id' => $request->product_id,
-                'quantity' => 1
+                'quantity' => $request->quantity // Menggunakan quantity dari input form
             ]);
         }
 
-        return redirect()->back()->with('message', 'Item added to cart!');
+        return redirect()->back()->with('message', 'Berhasil ditambahkan ke keranjang!');
     }
 
     public function checkout(Request $request)
@@ -97,5 +110,41 @@ class CartController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    // Fungsi untuk Update Jumlah (Plus/Minus)
+    public function update(Request $request, $id)
+    {
+        $cart = Cart::where('user_id', Auth::id())->findOrFail($id);
+        $product = Product::findOrFail($cart->product_id);
+
+        // Validasi input   
+        $request->validate([
+            'type' => 'required|in:plus,minus'
+        ]);
+
+        if ($request->type === 'plus') {
+            // Cek apakah stok masih mencukupi
+            if ($cart->quantity + 1 > $product->stock) {
+                return redirect()->back()->with('error', 'Stok tidak mencukupi.');
+            }
+            $cart->increment('quantity');
+        } else {
+            // Jika minus dan jumlah sudah 1, jangan biarkan jadi 0
+            if ($cart->quantity > 1) {
+                $cart->decrement('quantity');
+            }
+        }
+
+        return redirect()->back();
+    }
+
+    // Fungsi untuk Hapus Item (Trash)
+    public function destroy($id)
+    {
+        $cart = Cart::where('user_id', Auth::id())->findOrFail($id);
+        $cart->delete();
+
+        return redirect()->back()->with('message', 'Item berhasil dihapus dari keranjang.');
     }
 }

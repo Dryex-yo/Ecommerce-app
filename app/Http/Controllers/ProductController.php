@@ -172,4 +172,23 @@ class ProductController extends Controller
 
         return redirect()->back()->with('message', 'Foto galeri berhasil dihapus');
     }   
+
+    public function show($id)
+    {
+        // Ambil produk berdasarkan ID, sertakan relasi kategori jika ada
+        $product = Product::with('images')->findOrFail($id);
+
+            return Inertia::render('Products/Show', [
+                'product' => $product
+            ]);
+    }
+
+    public function showCustomer($id)
+    {
+        $product = Product::with('images')->findOrFail($id);
+
+        return Inertia::render('Shop/ProductShow', [
+            'product' => $product
+        ]);
+    }
 }
