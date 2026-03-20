@@ -20,7 +20,8 @@ return new class extends Migration
                 $table->integer('stock')->default(0); // Stok barang
                 $table->string('image')->nullable(); // Nama file gambar
                 $table->string('category')->nullable(); // Kategori (Elektronik, Baju, dll)
-                $table->timestamps();               // Mencatat waktu dibuat & diupdate
+                $table->timestamps();     
+                $table->boolean('is_featured')->default(false)->after('price');          // Mencatat waktu dibuat & diupdate
             });
     }
 

@@ -22,6 +22,8 @@ use App\Http\Controllers\Admin\GlobalSearchController;
 // --- GUEST ROUTES ---
 Route::get('/', function (Request $request) {
     // Tetap catat visitor
+
+
     DB::table('visitors')->insert([
         'ip_address' => $request->ip(),
         'user_agent' => $request->userAgent(),
@@ -31,7 +33,7 @@ Route::get('/', function (Request $request) {
 
     return Inertia::render('Welcome', [
         // Ambil 4-8 produk saja untuk "Highlight" agar landing page ngebut
-        'products' => Product::where('stock', '>', 0)->latest()->take(8)->get(),
+        'products' => Product::latest()->take(8)->get(),
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
     ]);
