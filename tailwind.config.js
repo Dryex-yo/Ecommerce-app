@@ -15,8 +15,24 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            animation: {
+                'infinite-scroll-reverse': 'infinite-scroll-reverse 35s linear infinite',
+                'infinite-scroll': 'infinite-scroll 40s linear infinite', // Animasi baru ke kiri
+            },
+            keyframes: {
+                'infinite-scroll-reverse': {
+                    from: { transform: 'translateX(-50%)' },
+                    to: { transform: 'translateX(0)' },
+                },
+                'infinite-scroll': { // Keyframe baru ke kiri
+                    from: { transform: 'translateX(0)' },
+                    to: { transform: 'translateX(-50%)' },
+                }
+            }
         },
     },
 
     plugins: [forms],
 };
+
+

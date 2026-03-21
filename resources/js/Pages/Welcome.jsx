@@ -156,118 +156,42 @@ const filteredProducts = useMemo(() => {
                 </header>
 
                 {/* --- PRODUCTS GRID --- */}
-<main id="collection" className="px-6 md:px-20 pb-40 bg-[#FDFDFD]">
-                    {/* Header Section: Minimalist & Bold */}
-                    <div className="flex flex-col mb-24">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="h-[1px] w-12 bg-blue-600"></div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600">Selected Works</span>
+                <main id="collection" className="py-24 bg-[#FDFDFD] overflow-hidden">
+                    {/* Header Section */}
+                    <div className="px-6 md:px-20 mb-16">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="h-[1px] w-8 bg-blue-600"></div>
+                            <span className="text-[9px] font-black uppercase tracking-[0.4em] text-blue-600">Curated Gallery</span>
                         </div>
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                            <h3 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter uppercase italic leading-[0.8] transition-all">
-                                The 2026 <br /> 
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-400">Curations</span>
-                            </h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] leading-relaxed max-w-[200px] text-left md:text-right border-l-2 md:border-l-0 md:border-r-2 border-slate-100 pl-4 md:pl-0 md:pr-4">
-                                A strictly limited <br /> selection of our <br /> 
-                                <span className="text-slate-900 font-black italic">finest pieces.</span>
-                            </p>
-                        </div>
+                        <h3 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
+                            2026 <span className="text-slate-300">Showcase</span>
+                        </h3>
                     </div>
 
-                    {filteredProducts.length > 0 ? (
-                        /* ASYMMETRIC GRID: Membuat layout terlihat seperti majalah fashion/portofolio */
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-x-12 gap-y-32">
-                            {filteredProducts.map((product, index) => {
-                                // Logika penentuan lebar kolom agar tidak kaku
-                                // Index 0 & 3 (Lebar), Index 1 & 2 (Ramping)
-                                const isLarge = index % 4 === 0 || index % 4 === 3;
-                                
-                                return (
-                                    <div 
-                                        key={product.id} 
-                                        className={`group relative flex flex-col ${
-                                            isLarge ? 'md:col-span-7' : 'md:col-span-5'
-                                        }`}
-                                    >
-                                        {/* Image Container dengan efek 2026 Glassmorphism */}
-                                        <div className="relative aspect-[4/5] md:aspect-auto md:h-[650px] bg-[#F8F8F8] rounded-[3rem] overflow-hidden mb-10 transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:shadow-[0_60px_100px_-20px_rgba(0,0,0,0.12)] group-hover:-translate-y-3">
-                                            <Link href={route('shop.product.show', product.id)} className="block w-full h-full">
-                                                {product.image ? (
-                                                    <img 
-                                                        src={`/storage/${product.image}`} 
-                                                        className="w-full h-full object-cover transition-transform duration-[2s] ease-out group-hover:scale-110 grayscale-[0.3] group-hover:grayscale-0" 
-                                                        alt={product.name} 
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-slate-200">
-                                                        <Package size={80} strokeWidth={0.5} />
-                                                    </div>
-                                                )}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                                            </Link>
-
-                                            {/* Floating Quick Add */}
-                                            <div className="absolute inset-x-0 bottom-0 p-8 translate-y-6 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.19,1,0.22,1)]">
-                                                <button 
-                                                    onClick={(e) => handleAddToCart(e, product.id)}
-                                                    className="w-full bg-white/10 backdrop-blur-2xl border border-white/20 text-white py-5 rounded-[2rem] font-black text-[10px] tracking-[0.4em] flex items-center justify-center gap-3 hover:bg-white hover:text-slate-900 transition-all duration-300 uppercase shadow-2xl active:scale-95 group/btn"
-                                                >
-                                                    <ShoppingCart size={14} strokeWidth={3} className="group-hover/btn:scale-110 transition-transform" /> 
-                                                    Add to Collection
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Product Info: Ultra Clean */}
-                                        <div className="flex justify-between items-start px-4">
-                                            <div className="max-w-[70%]">
-                                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-3 block">
-                                                    {product.category || 'Archive'}
-                                                </span>
-                                                <h4 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tighter leading-none group-hover:text-blue-600 transition-colors duration-500">
-                                                    {product.name}
-                                                </h4>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-2xl font-black text-slate-950 tracking-tighter mb-1">
-                                                    Rp {new Intl.NumberFormat('id-ID').format(product.price)}
-                                                </p>
-                                                <div className="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-lg">
-                                                    <Star size={10} fill="currentColor" className="text-slate-900"/>
-                                                    <span className="text-[9px] font-black uppercase tracking-tighter">4.9</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        /* Empty State */
-                        <div className="py-48 text-center bg-slate-50/50 rounded-[5rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center">
-                            <SearchX size={80} className="text-slate-200" strokeWidth={0.5} />
-                            <h4 className="text-3xl font-black text-slate-900 uppercase tracking-tighter italic mt-6">No Pieces Found</h4>
-                        </div>
-                    )}
-
-                    {/* CTA to Full Shop */}
-                    <div className="mt-40 flex flex-col items-center gap-8">
-                        <div className="h-20 w-[1px] bg-gradient-to-b from-blue-600 to-transparent"></div>
-                        <Link 
-                            href={route('shop.index')} 
-                            className="group flex flex-col items-center gap-6"
-                        >
-                            <span className="text-[11px] font-black uppercase tracking-[0.6em] text-slate-400 group-hover:text-blue-600 transition-all duration-500">
-                                View Full Collection
-                            </span>
-                            <div className="w-20 h-20 rounded-full border border-slate-200 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all duration-700 group-hover:scale-110 shadow-sm">
-                                <ArrowRight size={28} className="group-hover:translate-x-1 transition-transform" />
+                    <div className="flex flex-col gap-16">
+                        {/* BARIS 1: Bergerak ke KANAN (Reverse) */}
+                        <div className="relative">
+                            <div className="flex gap-6 animate-infinite-scroll-reverse hover:[animation-play-state:paused] w-max">
+                                {[...products.slice(0, 5), ...products.slice(0, 5)].map((product, index) => (
+                                    <ProductCard key={`top-${product.id}-${index}`} product={product} />
+                                ))}
                             </div>
-                        </Link>
-                    </div>
-                </main>
+                        </div>
 
+                        {/* BARIS 2: Bergerak ke KIRI (Normal) */}
+                        <div className="relative">
+                            <div className="flex gap-6 animate-infinite-scroll hover:[animation-play-state:paused] w-max">
+                                {[...products.slice(5, 10), ...products.slice(5, 10)].map((product, index) => (
+                                    <ProductCard key={`bottom-${product.id}-${index}`} product={product} />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Masking Gradient agar halus di pinggir layar */}
+                    <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#FDFDFD] to-transparent z-10 pointer-events-none"></div>
+                    <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#FDFDFD] to-transparent z-10 pointer-events-none"></div>
+                </main>
                 {/* --- FOOTER --- */}
                 <footer className="bg-slate-950 text-white pt-32 pb-16 px-6 md:px-20">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 mb-32">
@@ -317,5 +241,51 @@ function SocialIcon({ icon }) {
         <a href="#" className="w-12 h-12 rounded-full border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-white hover:text-slate-950 hover:border-white transition-all duration-500 shadow-sm">
             {icon}
         </a>
+    );
+}
+
+function ProductCard({ product }) {
+    return (
+        <div className="w-[240px] md:w-[280px] flex-shrink-0 group/card flex flex-col">
+            {/* Image Container: Pastikan aspect-ratio terkunci dan overflow-hidden */}
+            <div className="relative aspect-[3/4] w-full bg-[#F8F8F8] rounded-[2rem] overflow-hidden border border-slate-100 transition-all duration-500 group-hover/card:shadow-xl group-hover/card:-translate-y-1">
+                <Link href={route('shop.product.show', product.id)} className="block w-full h-full">
+                    {product.image ? (
+                        <img 
+                            src={`${product.image}`} 
+                            // object-cover sangat penting agar gambar tidak gepeng
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110" 
+                            alt={product.name} 
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50">
+                            <Package size={32} />
+                        </div>
+                    )}
+                </Link>
+                
+                {/* Overlay Button */}
+                <div className="absolute inset-x-0 bottom-0 p-4 translate-y-2 opacity-0 group-hover/card:translate-y-0 group-hover/card:opacity-100 transition-all duration-300">
+                    <div className="bg-slate-900/80 backdrop-blur-md text-white py-3 rounded-2xl font-bold text-[9px] text-center tracking-widest uppercase">
+                        View Details
+                    </div>
+                </div>
+            </div>
+
+            {/* Info Section: Beri margin-top agar tidak menempel ke box gambar */}
+            <div className="mt-4 px-2 flex flex-col gap-1">
+                <h4 className="font-bold text-sm text-slate-900 truncate tracking-tight">
+                    {product.name}
+                </h4>
+                <div className="flex justify-between items-center">
+                    <p className="font-black text-blue-600 text-sm">
+                        Rp {new Intl.NumberFormat('id-ID').format(product.price)}
+                    </p>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-0.5 rounded">
+                        {product.category || 'Luxury'}
+                    </span>
+                </div>
+            </div>
+        </div>
     );
 }

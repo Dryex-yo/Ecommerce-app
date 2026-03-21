@@ -33,7 +33,7 @@ Route::get('/', function (Request $request) {
 
     return Inertia::render('Welcome', [
         // Ambil 4-8 produk saja untuk "Highlight" agar landing page ngebut
-        'products' => Product::latest()->take(8)->get(),
+        'products' => Product::latest()->take(10)->get(),
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
     ]);
