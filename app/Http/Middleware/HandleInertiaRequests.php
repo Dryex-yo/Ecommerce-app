@@ -68,7 +68,7 @@ class HandleInertiaRequests extends Middleware
                     'error' => fn () => $request->session()->get('error'),
                 ],
 
-                'cart_count' => function () use ($request) {
+                'cart_count' => function () use ($request) {    
                     if (!$request->user()) return 0;
                     // Asumsi Anda punya tabel/model Cart
                     return \App\Models\Cart::where('user_id', $request->user()->id)->sum('quantity');

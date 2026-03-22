@@ -11,7 +11,7 @@ export default function Show({ auth, order }) {
             {/* Header & Back Button */}
             <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-4">
-                    <Link href={route('orders.index')} className="p-3 bg-white rounded-2xl shadow-sm hover:bg-slate-50 transition-all text-slate-500">
+                    <Link href={route('admin.orders.index')} className="p-3 bg-white rounded-2xl shadow-sm hover:bg-slate-50 transition-all text-slate-500">
                         <ArrowLeft size={20} />
                     </Link>
                     <div>

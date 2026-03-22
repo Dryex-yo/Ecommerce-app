@@ -69,7 +69,7 @@ export default function Index({ auth, cartItems }) {
                                     {/* Image Container */}
                                     <div className="w-32 h-32 rounded-3xl overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0">
                                         <img 
-                                            src={`/storage/${item.product.image}`} 
+                                            src={`${item.product.image}`} 
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                                             alt={item.product.name} 
                                         />

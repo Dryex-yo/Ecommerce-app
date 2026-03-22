@@ -103,7 +103,7 @@ export default function Edit({ auth, product }) {
             <Head title="Edit Product" />
 
             <div className="mb-8 text-center lg:text-left">
-                <Link href={route('products.index')} className="text-sm text-blue-600 font-bold hover:underline">
+                <Link href={route('admin.products.index')} className="text-sm text-blue-600 font-bold hover:underline">
                     ← Back to Inventory
                 </Link>
                 <h2 className="text-3xl font-black text-slate-800 mt-2">Update Product</h2>

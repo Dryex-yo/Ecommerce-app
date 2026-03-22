@@ -50,7 +50,7 @@ export default function Create({ auth }) {
             <Head title="Add New Product" />
 
             <div className="mb-8">
-                <Link href={route('products.index')} className="text-sm text-blue-600 font-bold hover:underline">← Back to List</Link>
+                <Link href={route('admin.products.index')} className="text-sm text-blue-600 font-bold hover:underline">← Back to List</Link>
                 <h2 className="text-2xl font-black text-slate-800 mt-2">Add New Product</h2>
             </div>
 

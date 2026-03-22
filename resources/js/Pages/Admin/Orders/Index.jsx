@@ -59,7 +59,7 @@ export default function Index({ auth, orders = [] }) {
                                     </td>
                                     <td className="p-6 text-right">
                                         <Link 
-                                            href={route('orders.show', order.id)}
+                                            href={route('admin.orders.show', order.id)}
                                             className="p-2 inline-block text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                                         >
                                             <Eye size={18} />

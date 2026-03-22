@@ -6,24 +6,27 @@ use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Controllers
+// --- CONTROLLERS USER ---
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController as UserOrderController;
+
+// --- CONTROLLERS ADMIN ---
 use App\Http\Controllers\Admin\AnalyticsController;
-use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\GlobalSearchController;
 
-// --- GUEST ROUTES ---
+// --------------------------------------------------------------------------
+// GUEST ROUTES
+// --------------------------------------------------------------------------
 Route::get('/', function (Request $request) {
-    // Tetap catat visitor
-
-
+    // Catat visitor
     DB::table('visitors')->insert([
         'ip_address' => $request->ip(),
         'user_agent' => $request->userAgent(),
@@ -32,69 +35,92 @@ Route::get('/', function (Request $request) {
     ]);
 
     return Inertia::render('Welcome', [
-        // Ambil 4-8 produk saja untuk "Highlight" agar landing page ngebut
         'products' => Product::latest()->take(10)->get(),
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
     ]);
 })->name('welcome');
 
-Route::get('/shop', function (Request $request) {
-    return Inertia::render('Shop/Index', [ // Kita buat folder Shop, file Index.jsx
+Route::get('/shop', function () {
+    return Inertia::render('Shop/Index', [
         'products' => Product::where('stock', '>', 0)->latest()->get(),
     ]);
 })->name('shop.index');
 
-// --- AUTHENTICATED ROUTES (User & Admin) ---
+// --------------------------------------------------------------------------   
+// AUTHENTICATED ROUTES (User Biasa)
+// --------------------------------------------------------------------------
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Dashboard Tunggal
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/shop/product/{id}', [ProductController::class, 'showCustomer'])->name('shop.product.show');
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');    
-
-    // Profile
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Cart
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
-    Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
-    Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
-    Route::post('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
     
+    // Dashboard User (Membaca role di Controller)
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    Route::get('/shop/product/{id}', [ProductController::class, 'showCustomer'])->name('shop.product.show');
+    
+    Route::get('/my-orders', [UserOrderController::class, 'index'])->name('orders.index');
+    Route::get('/my-orders/{id}', [UserOrderController::class, 'show'])->name('orders.show');  
+
+    Route::controller(ProfileController::class)->group(function () {
+        Route::get('/profile', 'edit')->name('profile.edit');
+        Route::patch('/profile', 'update')->name('profile.update');
+        Route::delete('/profile', 'destroy')->name('profile.destroy');
+    });
+
+    Route::controller(CartController::class)->group(function () {
+        Route::get('/cart', 'index')->name('cart.index');
+        Route::post('/cart', 'store')->name('cart.store');
+        Route::patch('/cart/{id}', 'update')->name('cart.update');
+        Route::delete('/cart/{id}', 'destroy')->name('cart.destroy');
+        Route::post('/checkout', 'checkout')->name('cart.checkout');
+    });
 });
 
-// --- ADMIN ONLY ROUTES ---
-Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+// --------------------------------------------------------------------------
+// ADMIN ONLY ROUTES (Prefix: /admin, Name: admin.*)
+// --------------------------------------------------------------------------
+Route::middleware(['auth', 'can:admin-access'])->prefix('admin')->name('admin.')->group(function () {
     
-    // CRUD Products (Cukup satu baris ini untuk semua fungsi produk)
+    // --- DASHBOARD ADMIN ---
+    // Penting: Agar Sidebar 'Overview' dengan route('admin.dashboard') bekerja
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // CRUD Management
     Route::resource('products', ProductController::class);
-    
-    // Route tambahan di luar resource standar
+    Route::resource('categories', CategoryController::class);
     Route::delete('/product-images/{id}', [ProductController::class, 'destroyImage'])->name('product-images.destroy');
+    
+    // Search API (Untuk Global Search di AdminLayout)
     Route::get('/api/search', [GlobalSearchController::class, 'search'])->name('api.search');
     
     // Order Management
-    Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
-    Route::patch('/orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
-    // Analytics, Settings, Transaction & Report
-    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
-    
-    // Settings Group
-    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
-    Route::post('/settings/reset', [SettingController::class, 'reset'])->name('settings.reset'); // Dihapus prefix /admin-nya
-    
+    Route::controller(AdminOrderController::class)->group(function () {
+        Route::get('/orders', 'index')->name('orders.index');
+        Route::get('/orders/{id}', 'show')->name('orders.show');
+        Route::patch('/orders/{order}', 'update')->name('orders.update');
+        Route::delete('/orders/{order}', 'destroy')->name('orders.destroy');
+    });
+
+    // Analytics
+    Route::get('/analytics', function () {
+        return Inertia::render('Admin/Analytics');
+    })->name('analytics.index');
+
+    // Transactions
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     
-    // Reports Group
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reports/excel', [ReportController::class, 'exportExcel'])->name('reports.excel');
-    Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
+    // Settings
+    Route::controller(SettingController::class)->group(function () {
+        Route::get('/settings', 'index')->name('settings.index');
+        Route::post('/settings', 'store')->name('settings.store');
+        Route::post('/settings/reset', 'reset')->name('settings.reset');
+    });
+    
+    // Reports
+    Route::controller(ReportController::class)->group(function () {
+        Route::get('/reports', 'index')->name('reports.index');
+        Route::get('/reports/excel', 'exportExcel')->name('reports.excel');
+        Route::get('/reports/pdf', 'exportPdf')->name('reports.pdf');
+    });
 });
 
 require __DIR__.'/auth.php';

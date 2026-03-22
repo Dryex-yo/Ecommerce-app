@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* PAKSA SEMUA ELEMEN JADI DARK BLUE */
+html.dark body, 
+html.dark #app, /* Ini pembungkus Inertia */
+html.dark main,
+html.dark section,
+html.dark .min-h-screen {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+}
+
+/* HAJAR SEMUA DIV YANG PUNYA BACKGROUND PUTIH */
+html.dark div[class*="bg-white"],
+html.dark div[class*="bg-gray-"],
+html.dark div[class*="bg-slate-"] {
+    background-color: #0f172a !important;
+}
+
+/* KHUSUS UNTUK TEKS HERO (DISRUPTING COMMERCE) */
+html.dark h1, 
+html.dark h2, 
+html.dark .text-slate-900,
+html.dark .text-black {
+    color: #ffffff !important;
+}
+
+/* Transisi biar nggak kaget */
+* {
+    transition: background-color 0.4s ease-in-out;
+}

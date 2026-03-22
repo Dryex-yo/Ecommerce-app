@@ -27,10 +27,11 @@ class AdminOrderController extends Controller
     /**
      * Menampilkan detail pesanan spesifik.
      */
-    public function show(Order $order)
+    public function show($id)
     {
-        // Load relasi items dan produk di dalamnya agar tidak error saat render
-        $order->load(['user', 'items.product']);
+        // Kita gunakan findOrFail agar jika ID tidak ada langsung muncul 404
+        // Load relasi user, items, dan produk di dalamnya
+        $order = Order::with(['user', 'items.product'])->findOrFail($id);
 
         return Inertia::render('Admin/Orders/Show', [
             'order' => $order
@@ -51,5 +52,14 @@ class AdminOrderController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Status pesanan berhasil diperbarui.');
+    }
+
+    /**
+     * Opsional: Jika ingin admin bisa menghapus data pesanan
+     */
+    public function destroy(Order $order)
+    {
+        $order->delete();
+        return redirect()->route('admin.orders.index')->with('success', 'Pesanan berhasil dihapus.');
     }
 }

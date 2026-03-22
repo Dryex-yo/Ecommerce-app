@@ -15,14 +15,14 @@ export default function Show({ auth, product }) {
 
             {/* HEADER NAVIGATION */}
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <Link href={route('dashboard')} className="group flex items-center gap-3 text-slate-400 hover:text-slate-800 transition-all">
+                <Link href={route('admin.dashboard')} className="group flex items-center gap-3 text-slate-400 hover:text-slate-800 transition-all">
                     <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-all">
                         <ArrowLeft size={18} />
                     </div>
                     <span className="text-xs font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-900">Back to Dashboard</span>
                 </Link>
                 
-                <Link href={route('products.edit', product.id)} className="bg-blue-600 text-white px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2">
+                <Link href={route('admin.products.edit', product.id)} className="bg-blue-600 text-white px-8 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2">
                     <Edit size={14} /> Edit Product Detail
                 </Link>
             </div>

@@ -113,16 +113,25 @@ export default function Index({ auth, salesChartData, stats }) {
 }
 
 // Komponen Kecil untuk Kartu Statistik di halaman Analytics
-function AnalyticStatCard({ label, value, icon, color, bgColor }) {
+function AnalyticStatCard({ label, value, icon, color, bgColor, description }) {
     return (
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-            <div className="flex items-center gap-4 mb-5">
-                <div className={`p-3.5 rounded-2xl ${bgColor} ${color}`}>
-                    {icon}
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col justify-between h-full">
+            <div>
+                <div className="flex items-center gap-4 mb-5">
+                    <div className={`p-3.5 rounded-2xl ${bgColor} ${color}`}>
+                        {icon}
+                    </div>
+                    <p className="text-xs font-black text-slate-400 tracking-widest uppercase">{label}</p>
                 </div>
-                <p className="text-xs font-black text-slate-400 tracking-widest uppercase">{label}</p>
+                <h4 className="text-3xl font-black text-slate-800 tracking-tight">{value}</h4>
             </div>
-            <h4 className="text-3xl font-black text-slate-800 tracking-tight">{value}</h4>
+            
+            {/* Tambahkan bagian ini agar description muncul */}
+            {description && (
+                <p className="mt-4 text-sm font-bold text-slate-400">
+                    {description}
+                </p>
+            )}
         </div>
     );
 }

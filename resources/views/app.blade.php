@@ -4,13 +4,21 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name') }}</title>
+        @php
+            $settings = \App\Models\Setting::first();
+            $shopName = $settings->shop_name ?? config('app.name', 'Laravel');
+            $shopLogo = ($settings && $settings->shop_logo) 
+                    ? asset('storage/' . $settings->shop_logo) 
+                    : asset('');
+        @endphp
 
-        <!-- Fonts -->
+        <title inertia>{{ $settings->shop_name ?? config('app.name') }}</title>        <link rel="icon" type="image/png" href="{{ $shopLogo }}?v={{ time() }}">
+        <link rel="icon" type="image/png" href="{{ $shopLogo }}?v={{ time() }}">
+        <link rel="apple-touch-icon" href="{{ $shopLogo }}?v={{ time() }}">
+
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
         @routes
         @viteReactRefresh
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])

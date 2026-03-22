@@ -37,8 +37,17 @@ export default function ShopIndex({ auth, products }) {
                             type="text"
                             placeholder="Search our pieces..."
                             className="w-full pl-12 pr-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-blue-100 outline-none transition-all font-bold text-sm"
+                            value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
+                        {searchQuery && (
+                            <button 
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors"
+                            >
+                                <SearchX size={14} />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -49,13 +58,13 @@ export default function ShopIndex({ auth, products }) {
                             <div key={product.id} className="group flex flex-col">
                                 <div className="relative aspect-[3/4] bg-[#F1F1F1] rounded-[2rem] overflow-hidden mb-6 group-hover:shadow-2xl transition-all duration-700">
                                     <Link href={route('shop.product.show', product.id)}>
-                                        <img src={`/storage/${product.image}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                                        <img src={`${product.image}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
                                     </Link>
                                     <button 
                                         onClick={(e) => handleAddToCart(e, product.id)}
                                         className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md py-4 rounded-2xl font-black text-[10px] tracking-widest opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all uppercase shadow-xl hover:bg-blue-600 hover:text-white"
                                     >
-                                        Quick Add +
+                                        🛒 Add to Cart
                                     </button>
                                 </div>
                                 <div className="flex justify-between items-start mb-2">

@@ -1,303 +1,51 @@
 import React from 'react';
-import AdminLayout from '@/Layouts/AdminLayout';
 import UserLayout from '@/Layouts/UserLayout';
-import { Head, Link, usePage } from '@inertiajs/react'; // Tambah usePage
-import { 
-    ShoppingBag, Clock, DollarSign, Package, Activity, 
-    Users, ArrowUpRight, ArrowDownRight, AlertCircle,
-    ShoppingCart, Star, Zap, ChevronRight
-} from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ShoppingBag, Clock, Zap, ChevronRight } from 'lucide-react';
 
-export default function Dashboard({ auth, stats, latestProducts, recentOrders, myOrdersCount }) {
-    const { settings } = usePage().props; // Ambil data settings global
-    const user = auth?.user;
-    const role = user?.role;
+export default function UserDashboard({ auth, myOrdersCount }) {
+    const { settings } = usePage().props;
+    const user = auth.user;
     const shopName = settings?.shop_name || 'DRYEX SHOP';
 
-    // Helper Greeting berdasarkan jam
-    const getGreeting = () => {
-        const hour = new Date().getHours();
-        if (hour < 12) return 'Selamat Pagi';
-        if (hour < 17) return 'Selamat Siang';
-        return 'Selamat Malam';
-    };
-
-    // Helper Format Rupiah
-    const formatIDR = (amount) => new Intl.NumberFormat('id-ID', {
-        style: 'currency', currency: 'IDR', minimumFractionDigits: 0 
-    }).format(amount || 0);
-
-    // --- 1. TAMPILAN DASHBOARD USER ---
-    if (role !== 'admin') {
-        return (
-            <UserLayout user={user}>
-                <Head title={`${shopName} | My Dashboard`} />
-                <main className="max-w-5xl mx-auto py-16 px-6">
-                    <div className="mb-12">
-                        <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
-                            <Zap size={14} fill="currentColor"/> Customer Portal
-                        </div>
-                        <h2 className="text-5xl font-black text-slate-900 tracking-tighter">
-                            {getGreeting()}, {user?.name.split(' ')[0] || 'Sobat'}! 👋
-                        </h2>
-                        <p className="text-slate-500 font-medium text-lg mt-3">
-                            Selamat datang kembali di <span className="text-slate-900 font-bold">{shopName}</span>. 
-                            {myOrdersCount > 0 
-                                ? ` Kamu punya ${myOrdersCount} pesanan yang sedang diproses.` 
-                                : " Yuk, temukan produk impianmu hari ini!"}
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Card Pesanan */}
-                        <div className="group relative bg-white p-10 rounded-[3.5rem] shadow-sm border border-slate-50 hover:shadow-2xl hover:shadow-blue-100 transition-all duration-500 overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
-                                <Clock size={120} />
-                            </div>
-                            <div className="w-16 h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mb-8 shadow-inner">
-                                <Clock size={32} />
-                            </div>
-                            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Pesanan Saya</h3>
-                            <p className="text-slate-400 mt-2 mb-10 font-medium leading-relaxed">Pantau status pengiriman dan riwayat belanja kamu secara real-time.</p>
-                            <Link href="/orders" className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-xs font-black inline-flex items-center gap-2 hover:bg-blue-600 transition-all shadow-xl shadow-slate-200 uppercase tracking-widest">
-                                Riwayat Pesanan <ChevronRight size={16}/>
-                            </Link>
-                        </div>
-
-                        {/* Card Belanja */}
-                        <div className="group relative bg-white p-10 rounded-[3.5rem] shadow-sm border border-slate-50 hover:shadow-2xl hover:shadow-blue-100 transition-all duration-500 overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
-                                <ShoppingBag size={120} />
-                            </div>
-                            <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-8 shadow-inner">
-                                <ShoppingBag size={32} />
-                            </div>
-                            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Mulai Belanja</h3>
-                            <p className="text-slate-400 mt-2 mb-10 font-medium leading-relaxed">Lihat koleksi produk premium terbaru kami khusus untuk kamu.</p>
-                            <Link href="/" className="bg-blue-600 text-white px-8 py-4 rounded-2xl text-xs font-black inline-flex items-center gap-2 hover:bg-slate-900 transition-all shadow-xl shadow-blue-100 uppercase tracking-widest">
-                                Katalog Produk <ChevronRight size={16}/>
-                            </Link>
-                        </div>
-                    </div>
-                </main>
-            </UserLayout>
-        );
-    }
-
-    // --- 2. TAMPILAN DASHBOARD ADMIN ---
     return (
-        <AdminLayout user={user}>
-            <Head title={`${shopName} | Admin Panel`} />
-
-            {/* Welcome Header Admin */}
-            <div className="mb-10">
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight">
-                    Overview <span className="text-blue-600">—</span> {shopName}
-                </h2>
-                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Dashboard Analytics & Control</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <StatCard 
-                    label="TOTAL REVENUE" 
-                    value={formatIDR(stats?.totalRevenue)} 
-                    trend="+12%" 
-                    icon={<DollarSign size={20}/>} 
-                    color="bg-emerald-500" 
-                />
-                <StatCard 
-                    label="TOTAL ORDERS" 
-                    value={stats?.totalOrders || 0} 
-                    trend="+New" 
-                    icon={<ShoppingCart size={20}/>} 
-                    color="bg-blue-500" 
-                />
-                <StatCard 
-                    label="LOW STOCK" 
-                    value={stats?.lowStockCount || 0} 
-                    trend="Stock Alert" 
-                    icon={<AlertCircle size={20}/>} 
-                    color="bg-rose-500" 
-                    isDown={stats?.lowStockCount > 0} 
-                />
-                <StatCard 
-                    label="CUSTOMERS" 
-                    value={stats?.totalCustomers || 0} 
-                    trend="+Growth" 
-                    icon={<Users size={20}/>} 
-                    color="bg-indigo-500" 
-                />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-                {/* RECENT ORDERS TABLE */}
-                <div className="lg:col-span-2 bg-white rounded-[3rem] p-8 shadow-sm border border-slate-50">
-                    <div className="flex justify-between items-center mb-8">
-                        <h3 className="font-black text-xl text-slate-800 flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                                <Activity size={20} />
-                            </div>
-                            Recent Transactions
-                        </h3>
-                        <Link href={route('orders.index')} className="text-xs font-black text-blue-600 hover:underline">VIEW ALL</Link>
+        <UserLayout user={user}>
+            <Head title={`${shopName} | My Dashboard`} />
+            <main className="max-w-5xl mx-auto py-16 px-6">
+                <div className="mb-12">
+                    <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
+                        <Zap size={14} fill="currentColor"/> Customer Portal
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] border-b border-slate-50">
-                                    <th className="pb-5 pl-2">Customer</th>
-                                    <th className="pb-5">Amount</th>
-                                    <th className="pb-5">Status</th>
-                                    <th className="pb-5">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {recentOrders?.map((order) => {
-                                    // Konfigurasi warna status agar lebih variatif
-                                    const statusConfig = {
-                                        completed: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-                                        pending: 'bg-amber-50 text-amber-600 border-amber-100',
-                                        shipped: 'bg-blue-50 text-blue-600 border-blue-100',
-                                        cancelled: 'bg-rose-50 text-rose-600 border-rose-100',
-                                    };
-
-                                    return (
-                                        <tr key={order.id} className="group hover:bg-slate-50/50 transition-all">
-                                            <td className="py-5 pl-2">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-[11px] font-black text-slate-500 uppercase border border-slate-200 shadow-sm">
-                                                        {order.user?.name.charAt(0) || 'G'}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-black text-slate-800 leading-none">{order.user?.name || 'Guest'}</p>
-                                                        <p className="text-[10px] text-slate-400 mt-1.5 font-bold tracking-tight">#ORD-{order.id}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-5 font-black text-slate-800 text-sm">
-                                                {formatIDR(order.total_price)}
-                                            </td>
-                                            <td className="py-5">
-                                                <span className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border ${statusConfig[order.status] || statusConfig.pending}`}>
-                                                    {order.status}
-                                                </span>
-                                            </td>
-                                            <td className="py-5 text-[11px] text-slate-400 font-bold uppercase">
-                                                {new Date(order.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}
-                                            </td>
-                                            {/* Tombol Aksi Cepat */}
-                                            <td className="py-5 text-right pr-2">
-                                                <Link 
-                                                    href={`/orders/${order.id}`} 
-                                                    className="p-2.5 bg-slate-100 text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all inline-flex shadow-sm"
-                                                >
-                                                    <ChevronRight size={14} strokeWidth={3} />
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>                        
-                        </table>
-                    </div>
+                    <h2 className="text-5xl font-black text-slate-900 tracking-tighter">
+                        Halo, {user.name.split(' ')[0]}! 👋
+                    </h2>
+                    <p className="text-slate-500 font-medium text-lg mt-3">
+                        {myOrdersCount > 0 
+                            ? `Ada ${myOrdersCount} pesananmu yang sedang kami proses.` 
+                            : "Siap mencari koleksi terbaru hari ini?"}
+                    </p>
                 </div>
 
-                {/* INVENTORY MONITOR SECTION */}
-                <div className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-50 flex flex-col h-full">
-                    <div className="flex justify-between items-start mb-8">
-                        <div>
-                            <h3 className="font-black text-xl text-slate-800">Inventory Monitor</h3>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Stock Levels & Pricing</p>
-                        </div>
-                        <div className="bg-blue-50 text-blue-600 p-2 rounded-xl">
-                            <Package size={20} />
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="bg-white p-10 rounded-[3.5rem] border border-slate-50 shadow-sm hover:shadow-2xl transition-all">
+                        <div className="w-16 h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mb-8"><Clock size={32} /></div>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Pesanan Saya</h3>
+                        <p className="text-slate-400 mt-2 mb-10">Cek status pengiriman belanjaanmu.</p>
+                        <Link href={route('orders.index')} className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-xs font-black inline-flex items-center gap-2 uppercase tracking-widest">
+                            Riwayat Pesanan <ChevronRight size={16}/>
+                        </Link>
                     </div>
 
-                    <div className="space-y-4 flex-grow">
-                        {latestProducts && latestProducts.length > 0 ? (
-                            latestProducts.map((product) => (
-                                <Link 
-                                    key={product.id} 
-                                    href={route('products.show', product.id)} // <--- INI KUNCINYA: Link navigasi
-                                    className="group block p-4 rounded-[2rem] transition-all border border-slate-50 hover:border-blue-100 hover:bg-blue-50/20 bg-slate-50/30 mb-3 shadow-sm hover:shadow-md cursor-pointer"
-                                >
-                                    {/* Baris Atas: Gambar & Info Nama */}
-                                    <div className="flex items-center gap-4 mb-3">
-                                        <div className="w-12 h-12 bg-white rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm group-hover:scale-105 transition-transform">
-                                            {product.image ? (
-                                                <img src={`/storage/${product.image}`} className="w-full h-full object-cover" alt={product.name} />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-slate-200 bg-slate-50">
-                                                    <Package size={18} />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-black text-slate-800 truncate group-hover:text-blue-600 transition-colors">
-                                                {product.name}
-                                            </p>
-                                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-                                                {product.category?.name || 'General'}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Baris Bawah: Status Stok & Harga */}
-                                    <div className="flex items-center justify-between pt-3 border-t border-slate-100/50">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`w-2 h-2 rounded-full ${
-                                                product.stock > 10 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-rose-500'
-                                            }`}></span>
-                                            <span className="text-[10px] font-black text-slate-600 uppercase">
-                                                {product.stock} Units
-                                            </span>
-                                        </div>
-                                        
-                                        <div className="text-right">
-                                            <span className="text-[11px] font-black text-blue-600 px-3 py-1 bg-white rounded-xl shadow-sm border border-blue-50">
-                                                {formatIDR(product.price).replace('Rp', '').trim()}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </Link>                         
-                            ))
-                        ) : (
-                            <div className="text-center py-10 flex flex-col items-center justify-center h-full">
-                                <Package className="text-slate-100 mb-2" size={60} />
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No Products Found</p>
-                            </div>
-                        )}
+                    <div className="bg-white p-10 rounded-[3.5rem] border border-slate-50 shadow-sm hover:shadow-2xl transition-all">
+                        <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-8"><ShoppingBag size={32} /></div>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Belanja Lagi</h3>
+                        <p className="text-slate-400 mt-2 mb-10">Lihat katalog produk premium kami.</p>
+                        <Link href={route('shop.index')} className="bg-blue-600 text-white px-8 py-4 rounded-2xl text-xs font-black inline-flex items-center gap-2 uppercase tracking-widest">
+                            Katalog <ChevronRight size={16}/>
+                        </Link>
                     </div>
-                    
-                    <Link href={route('products.index')} className="w-full mt-8 py-4 rounded-[1.5rem] bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 transition-all flex justify-center items-center gap-3 shadow-lg shadow-slate-200">
-                        Inventory Management <ArrowUpRight size={16}/>
-                    </Link>
                 </div>
-            </div>
-        </AdminLayout>
-    );
-}
-
-function StatCard({ label, value, trend, icon, color, isDown = false }) {
-    return (
-        <div className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-50 relative overflow-hidden group hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
-            <div className="flex justify-between items-start mb-6 relative z-10">
-                <div className={`p-4 rounded-2xl ${color} text-white shadow-xl shadow-${color.split('-')[1]}-100 transform group-hover:scale-110 transition-transform duration-500`}>
-                    {icon}
-                </div>
-                <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${isDown ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                    {isDown ? <ArrowDownRight size={12}/> : <ArrowUpRight size={12}/>}
-                    <span className="text-[10px] font-black uppercase">{trend}</span>
-                </div>
-            </div>
-            <div className="relative z-10">
-                <p className="text-[10px] font-black text-slate-300 tracking-[0.2em] uppercase">{label}</p>
-                <h4 className="text-3xl font-black text-slate-800 mt-2 tracking-tighter">{value}</h4>
-            </div>
-            {/* Dekorasi Background Card */}
-            <div className={`absolute -bottom-6 -right-6 w-24 h-24 ${color} opacity-[0.03] rounded-full group-hover:scale-150 transition-transform duration-700`}></div>
-        </div>
+            </main>
+        </UserLayout>
     );
 }

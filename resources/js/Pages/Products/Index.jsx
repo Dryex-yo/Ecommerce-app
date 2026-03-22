@@ -24,7 +24,7 @@ export default function Index({ auth, products = [] }) {
                 </div>
 
                 <Link 
-                    href={route('products.create')} 
+                    href={route('admin.products.create')} 
                     className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:scale-105 transition-all text-sm"
                 >
                     <Plus size={18} /> Add New Product
@@ -100,7 +100,7 @@ export default function Index({ auth, products = [] }) {
                                     <td className="p-6 text-right">
                                         <div className="flex justify-end gap-2">
                                             <Link 
-                                                href={route('products.edit', product.id)} 
+                                                href={route('admin.products.edit', product.id)} 
                                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                                                 title="Edit Produk"
                                             >

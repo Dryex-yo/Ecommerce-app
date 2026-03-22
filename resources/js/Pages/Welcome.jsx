@@ -1,47 +1,47 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import { UserIcon } from '@heroicons/react/24/solid';
+import ThemeToggle from '@/Components/ThemeToggle';
 import { Link, Head, router, usePage } from '@inertiajs/react';
 import { 
     ShoppingCart, Package, Search, LogOut, 
     ShieldCheck, SearchX, ArrowRight,
     Star, Instagram, Twitter, MessageCircle,
-    ShoppingBag, Sparkles
+    ShoppingBag, Sparkles, Sun, Moon
 } from 'lucide-react';
 
 export default function Welcome({ auth, products }) {
     const { settings, cart_count } = usePage().props;
     const [searchQuery, setSearchQuery] = useState('');
     
-    
-    const handleAddToCart = (e, productId) => {
-        e.preventDefault();
+    const handleAddToCart = (productId) => {
         router.post(route('cart.store'), { 
             product_id: productId, 
             quantity: 1 
         }, {
             preserveScroll: true,
-            onSuccess: () => {
-                // Notifikasi atau efek tambahan bisa ditaruh di sini
+            onStart: () => {
+                // Opsional: bisa tambah loading state jika mau
             },
+            onSuccess: () => {
+                toast.success('Berhasil ditambahkan ke keranjang!', {
+                    duration: 3000,
+                    position: 'top-right',
+                    style: {
+                        background: '#0F172A', // Slate 900 biar cocok dengan tema Anda
+                        color: '#fff',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                    },
+                });            
+            },
+            onError: () => {
+                toast.error('Gagal menambahkan produk.');
+            }
         });
     };
 
     const shopName = settings?.shop_name || 'DRYEX SHOP';
-
-const filteredProducts = useMemo(() => {
-    // Tambahkan pengecekan Array.isArray untuk mencegah error .filter()
-        if (!products || !Array.isArray(products)) return [];
-
-        return products.filter((product) => {
-            const searchLower = searchQuery.toLowerCase();
-            // Gunakan optional chaining (?.) agar tidak crash jika name/category null
-            return (
-                product.name?.toLowerCase().includes(searchLower) ||
-                product.category?.name?.toLowerCase().includes(searchLower) ||
-                product.category?.toLowerCase().includes(searchLower)
-            );
-        });
-    }, [searchQuery, products]);
 
     const handleLogout = (e) => {
         e.preventDefault();
@@ -50,6 +50,7 @@ const filteredProducts = useMemo(() => {
 
     return (
         <>
+            <Toaster />
             <Head title={`${shopName}`} />
             
             <div className="min-h-screen bg-[#FDFDFD] font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
@@ -68,24 +69,15 @@ const filteredProducts = useMemo(() => {
                                 <ShoppingCart size={20} strokeWidth={2.5} />
                             )}
                         </div>
+                        
                         <h1 className="font-black text-xl tracking-tighter text-slate-800 uppercase">
                             {shopName.split(' ')[0]}
                             <span className="text-blue-600">
                                 {shopName.includes(' ') ? ` ${shopName.split(' ').slice(1).join(' ')}` : '.'}
                             </span>
                         </h1>
+                         <ThemeToggle />
                     </Link>
-                    {/* Minimalist Search Bar */}
-                    <div className="hidden lg:flex flex-1 max-w-lg mx-12 relative group">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={16} />
-                        <input 
-                            type="text" 
-                            placeholder="Find your masterpiece..." 
-                            className="w-full bg-slate-50 border border-slate-100 focus:border-blue-200 focus:bg-white rounded-full pl-14 pr-6 py-3.5 text-xs transition-all outline-none font-semibold text-slate-700 placeholder:text-slate-400 shadow-sm"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
 
                     <div className="flex items-center gap-6">
                         {auth.user ? (
@@ -93,10 +85,15 @@ const filteredProducts = useMemo(() => {
                                 <Link href={route('cart.index')} className="relative p-3 text-slate-600 hover:bg-slate-50 rounded-full transition-all group">
                                     <ShoppingCart size={22} strokeWidth={1.5} />
                                     {cart_count > 0 && (
-                                        <span className="absolute top-1.5 right-1.5 bg-blue-600 text-white text-[8px] font-black w-5 h-5 flex items-center justify-center rounded-full border-[3px] border-white shadow-lg animate-bounce">
+                                        <span className="absolute top-1.5 right-1.5 bg-red-600 text-white text-[8px] font-black w-5 h-5 flex items-center justify-center rounded-full border-[3px] border-white shadow-lg animate-bounce">
                                             {cart_count}
                                         </span>
                                     )}
+                                </Link>
+                                <Link href="/orders">
+                                    <button className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full font-bold text-[11px] tracking-widest hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-200 transition-all active:scale-95 uppercase">
+                                        Orders
+                                    </button>
                                 </Link>
                                 <Link href={route('dashboard')} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full font-bold text-[11px] tracking-widest hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-200 transition-all active:scale-95 uppercase">
                                     Dashboard
@@ -173,7 +170,7 @@ const filteredProducts = useMemo(() => {
                         <div className="relative">
                             <div className="flex gap-6 animate-infinite-scroll-reverse hover:[animation-play-state:paused] w-max">
                                 {[...products.slice(0, 5), ...products.slice(0, 5)].map((product, index) => (
-                                    <ProductCard key={`top-${product.id}-${index}`} product={product} />
+                                    <ProductCard key={`top-${product.id}-${index}`} product={product} handleAddToCart={handleAddToCart} />
                                 ))}
                             </div>
                         </div>
@@ -182,7 +179,7 @@ const filteredProducts = useMemo(() => {
                         <div className="relative">
                             <div className="flex gap-6 animate-infinite-scroll hover:[animation-play-state:paused] w-max">
                                 {[...products.slice(5, 10), ...products.slice(5, 10)].map((product, index) => (
-                                    <ProductCard key={`bottom-${product.id}-${index}`} product={product} />
+                                    <ProductCard key={`bottom-${product.id}-${index}`} product={product} handleAddToCart={handleAddToCart} />
                                 ))}
                             </div>
                         </div>
@@ -244,17 +241,18 @@ function SocialIcon({ icon }) {
     );
 }
 
-function ProductCard({ product }) {
+function ProductCard({ product, handleAddToCart, onAdd }) {
     return (
         <div className="w-[240px] md:w-[280px] flex-shrink-0 group/card flex flex-col">
-            {/* Image Container: Pastikan aspect-ratio terkunci dan overflow-hidden */}
-            <div className="relative aspect-[3/4] w-full bg-[#F8F8F8] rounded-[2rem] overflow-hidden border border-slate-100 transition-all duration-500 group-hover/card:shadow-xl group-hover/card:-translate-y-1">
+            
+            {/* Image Container */}
+            <div className="relative aspect-[3/4] w-full bg-[#F8F8F8] rounded-[2rem] overflow-hidden border border-slate-100 transition-all duration-500 group-hover/card:shadow-xl group-hover/card:-translate-y-1 ">
+                
                 <Link href={route('shop.product.show', product.id)} className="block w-full h-full">
                     {product.image ? (
                         <img 
                             src={`${product.image}`} 
-                            // object-cover sangat penting agar gambar tidak gepeng
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110" 
+                            className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover/card:opacity-100" 
                             alt={product.name} 
                         />
                     ) : (
@@ -264,15 +262,35 @@ function ProductCard({ product }) {
                     )}
                 </Link>
                 
-                {/* Overlay Button */}
-                <div className="absolute inset-x-0 bottom-0 p-4 translate-y-2 opacity-0 group-hover/card:translate-y-0 group-hover/card:opacity-100 transition-all duration-300">
-                    <div className="bg-slate-900/80 backdrop-blur-md text-white py-3 rounded-2xl font-bold text-[9px] text-center tracking-widest uppercase">
-                        View Details
-                    </div>
+                {/* 🔥 2026 Add to Cart Overlay */}
+                <div className="absolute inset-x-0 bottom-0 p-4 translate-y-3 opacity-0 group-hover/card:translate-y-0 group-hover/card:opacity-100 transition-all duration-500">
+                    
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleAddToCart(product.id);
+                        }}
+                        className="w-full relative overflow-hidden rounded-2xl py-3 text-[10px] font-semibold tracking-widest uppercase text-white 
+                                   bg-white/10 backdrop-blur-xl border border-white/20
+                                   transition-all duration-300
+                                   hover:scale-[1.04] hover:shadow-[0_10px_30px_rgba(99,102,241,0.4)]"
+                    >
+                        
+                        {/* Glow Effect */}
+                        <span className="absolute inset-0 bg-gradient-to-r from-indigo-500/40 via-purple-500/40 to-pink-500/40 opacity-0 hover:opacity-100 transition duration-500 blur-xl"></span>
+
+                        {/* Content */}
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                            🛒 Add to Cart
+                        </span>
+
+                    </button>
+
                 </div>
             </div>
 
-            {/* Info Section: Beri margin-top agar tidak menempel ke box gambar */}
+            {/* Info Section */}
             <div className="mt-4 px-2 flex flex-col gap-1">
                 <h4 className="font-bold text-sm text-slate-900 truncate tracking-tight">
                     {product.name}
@@ -282,7 +300,7 @@ function ProductCard({ product }) {
                         Rp {new Intl.NumberFormat('id-ID').format(product.price)}
                     </p>
                     <span className="text-[8px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-0.5 rounded">
-                        {product.category || 'Luxury'}
+                        {product.category}
                     </span>
                 </div>
             </div>

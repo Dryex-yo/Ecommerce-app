@@ -61,14 +61,14 @@ export default function AdminLayout({ children, user }) {
     };
 
     const getHeaderTitle = () => {
-        if (route().current('products.*')) return 'Products Management';
-        if (route().current('orders.*')) return 'Customer Orders';
-        if (route().current('analytics.*')) return 'Business Analytics';
-        if (route().current('transactions.*')) return 'Transaction Logs';
-        if (route().current('reports.*')) return 'Financial Reports';
-        if (route().current('settings.*')) return 'System Settings';
-        if (route().current('dashboard')) return 'Dashboard Overview';
-        return 'Admin Panel';
+    if (route().current('admin.products.*')) return 'Products Management';
+    if (route().current('admin.orders.*')) return 'Customer Orders';
+    if (route().current('admin.analytics.*')) return 'Business Analytics';
+    if (route().current('admin.transactions.*')) return 'Transaction Logs';
+    if (route().current('admin.reports.*')) return 'Financial Reports';
+    if (route().current('admin.settings.*')) return 'System Settings';
+    if (route().current('admin.dashboard')) return 'Dashboard Overview';
+    return 'Admin Panel';;
     };
     
     return (
@@ -109,16 +109,17 @@ export default function AdminLayout({ children, user }) {
                     <div className="pb-2">
                         <p className="px-6 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-2">Main Menu</p>
                     </div>
-                    <SidebarItem icon={<LayoutGrid size={20}/>} label="Overview" href={route('dashboard')} active={route().current('dashboard')} />
-                    <SidebarItem icon={<BarChart3 size={20}/>} label="Analytics" href={route('analytics.index')} active={route().current('analytics.index')} />
+                    <SidebarItem icon={<LayoutGrid size={20}/>} label="Overview" href={route('admin.dashboard')} active={route().current('admin.dashboard')} />
+                    <SidebarItem icon={<BarChart3 size={20}/>} label="Analytics" href={route('admin.analytics.index')} active={route().current('admin.analytics.index')} />
                     
                     <div className="pt-6 pb-2">
                         <p className="px-6 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-2">Shop Management</p>
                     </div>
-                    <SidebarItem icon={<Package size={20}/>} label="Products" href={route('products.index')} active={route().current('products.*')} />
-                    <SidebarItem icon={<ShoppingCart size={20} />} label="Orders" href={route('orders.index')} active={route().current('orders.*')} />
-                    <SidebarItem icon={<Receipt size={20}/>} label="Transactions" href={route('transactions.index')} active={route().current('transactions.index')} />
-                    <SidebarItem icon={<FileText size={20}/>} label="Reports" href={route('reports.index')} active={route().current('reports.index')} />
+                    <SidebarItem icon={<Package size={20}/>} label="Products" href={route('admin.products.index')} active={route().current('admin.products.*')} />
+                    <SidebarItem icon={<ShoppingCart size={20} />} label="Orders" href={route('admin.orders.index')} active={route().current('admin.orders.*')} />
+                    <SidebarItem icon={<LayoutGrid size={20}/>} label="Categories" href={route('admin.categories.index')} active={route().current('admin.categories.*')} />
+                    <SidebarItem icon={<Receipt size={20}/>} label="Transactions" href={route('admin.transactions.index')} active={route().current('admin.transactions.index')} />
+                    <SidebarItem icon={<FileText size={20}/>} label="Reports" href={route('admin.reports.index')} active={route().current('admin.reports.index')} />
 
                     {/* --- SYSTEM SECTION --- */}
                     <div className="pt-6 pb-2">
@@ -127,8 +128,8 @@ export default function AdminLayout({ children, user }) {
                     <SidebarItem 
                         icon={<Settings size={20}/>} 
                         label="Settings" 
-                        href={route('settings.index')} 
-                        active={route().current('settings.*')} 
+                        href={route('admin.settings.index')} 
+                        active={route().current('admin.settings.*')} 
                     />
                 </nav>
             {/* BAGIAN BAWAH SIDEBAR (FOOTER) */}
@@ -231,7 +232,7 @@ export default function AdminLayout({ children, user }) {
                                 <h4 className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Alerts</h4>
                                 <div className="space-y-1 mt-2">
                                     {pendingOrders > 0 && (
-                                        <Link href={route('orders.index')} className="flex items-center gap-4 p-4 hover:bg-amber-50 rounded-2xl transition-all">
+                                        <Link href={route('admin.orders.index')} className="flex items-center gap-4 p-4 hover:bg-amber-50 rounded-2xl transition-all">
                                             <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center"><ShoppingCart size={18} /></div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-700">{pendingOrders} New Orders</p>
@@ -240,7 +241,7 @@ export default function AdminLayout({ children, user }) {
                                         </Link>
                                     )}
                                     {lowStock > 0 && (
-                                        <Link href={route('products.index')} className="flex items-center gap-4 p-4 hover:bg-rose-50 rounded-2xl transition-all">
+                                        <Link href={route('admin.products.index')} className="flex items-center gap-4 p-4 hover:bg-rose-50 rounded-2xl transition-all">
                                             <div className="w-10 h-10 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center"><AlertTriangle size={18} /></div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-700">{lowStock} Low Stock Items</p>
@@ -289,14 +290,14 @@ export default function AdminLayout({ children, user }) {
                                 </div>
                                 
                                 <div className="space-y-1">
-                                    <Link href={route('settings.index')} className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-2xl transition-all group/item">
+                                    <Link href={route('admin.settings.index')} className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-2xl transition-all group/item">
                                         <div className="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center group-hover/item:bg-blue-100 transition-colors">
                                             <Settings size={16} />
                                         </div>
                                         <span className="text-sm font-bold">Edit Profile</span>
                                     </Link>
                                     
-                                    <Link href={route('settings.index')} className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-2xl transition-all group/item">
+                                    <Link href={route('admin.settings.index')} className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-blue-50 hover:text-blue-600 rounded-2xl transition-all group/item">
                                         <div className="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center group-hover/item:bg-blue-100 transition-colors">
                                             <Bell size={16} />
                                         </div>
