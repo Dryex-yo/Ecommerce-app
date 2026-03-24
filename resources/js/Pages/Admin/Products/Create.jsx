@@ -11,11 +11,12 @@ export default function Create({ auth, categories }) {
         stock: '',
         description: '',
         image: null,
-        gallery: [],
+        gallery: new Array(10).fill(null),
     });
 
     const [imagePreview, setImagePreview] = useState(null);
     const [galleryPreviews, setGalleryPreviews] = useState([]);
+    const [draggedIndex, setDraggedIndex] = useState(null);
     
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -24,16 +25,37 @@ export default function Create({ auth, categories }) {
     };
 
     const handleGalleryChange = (e) => {
-        const files = Array.from(e.target.files);
-        // Batasi maksimal 10
-        const limitedFiles = files.slice(0, 10);
-        
-        setData('gallery', limitedFiles);
-        
-        // Buat preview untuk semua foto yang dipilih
-        const previews = limitedFiles.map(file => URL.createObjectURL(file));
-        setGalleryPreviews(previews);
+        const pickedFiles = Array.from(e.target.files);
+        const newGallery = [...data.gallery];
+        let fileIndex = 0;
+        for (let i = 0; i < newGallery.length; i++) {
+            if (newGallery[i] === null && fileIndex < pickedFiles.length) {
+                newGallery[i] = pickedFiles[fileIndex];
+                fileIndex++;
+            }
+        }
+        setData('gallery', newGallery);
     };
+
+    // Fungsi Drag & Drop
+    const handleDragStart = (index) => setDraggedIndex(index);
+    const handleDragOver = (e) => e.preventDefault();
+    const handleDrop = (targetIndex) => {
+        if (draggedIndex === null) return;
+        const newGallery = [...data.gallery];
+        const temp = newGallery[draggedIndex];
+        newGallery[draggedIndex] = newGallery[targetIndex];
+        newGallery[targetIndex] = temp;
+        setData('gallery', newGallery);
+        setDraggedIndex(null);
+    };
+
+    // Fungsi Hapus (Tombol X)
+    const removeImage = (index) => {
+        const newGallery = [...data.gallery];
+        newGallery[index] = null; // Kembali ke status Empty
+        setData('gallery', newGallery);
+    };    
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -70,19 +92,20 @@ export default function Create({ auth, categories }) {
 
                     <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Category</label>
-                            <select 
-                                value={data.category_id}
-                                onChange={e => setData('category_id', e.target.value)}
-                                className="w-full px-5 py-3 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-50"
-                            >
-                                <option value="">Select Category</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>
-                                        {cat.name}
-                                    </option>
-                                ))}
-                            </select>
+                            <label className="block mb-2">Kategori</label>
+                                <input
+                                    type="text"
+                                    list="categoryOptions"
+                                    value={data.category_name}
+                                    onChange={e => setData('category_name', e.target.value)}
+                                    className="w-full border rounded-lg p-2"
+                                    placeholder="Ketik kategori baru atau pilih yang ada..."
+                                />
+                                <datalist id="categoryOptions">
+                                    {categories.map((cat) => (
+                                        <option key={cat.id} value={cat.name} />
+                                    ))}
+                                </datalist>
                         </div>
                         <div>
                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Price (Rp)</label>
@@ -122,36 +145,70 @@ export default function Create({ auth, categories }) {
                             {imagePreview && <img src={imagePreview} className="mt-2 w-32 h-32 object-cover rounded-lg" />}
                         </div>
                         {/* UNGGAH GALERI (MAKSIMAL 10 FOTO) */}
-                        <div className="mt-4">
+                        <div className="mt-6">
                             <label className="block text-sm font-bold text-slate-700 mb-2">Foto Galeri (Maksimal 10)</label>
                             <input 
-                                type="file" 
-                                multiple 
+                                type="file" multiple accept="image/*"
                                 onChange={handleGalleryChange}
-                                accept="image/*"
-                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-50 file:text-slate-700 hover:file:bg-slate-100"
+                                className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-6"
                             />
-                            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">
-                                Pilih beberapa foto sekaligus dengan menahan tombol Ctrl/Cmd
-                            </p>
-                            
-                            {/* Preview Galeri */}
-                            {galleryPreviews.length > 0 && (
-                            <div className="grid grid-cols-5 gap-2 mt-4">
-                                {galleryPreviews.map((url, index) => (
-                                    <div key={index} className="relative aspect-square group">
-                                        <img 
-                                            src={url} 
-                                            alt={`Preview ${index}`} 
-                                            className="w-full h-full object-cover rounded-xl shadow-sm border border-white"
-                                        />
-                                        <span className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 rounded-md font-bold">
-                                            {index + 1}
-                                        </span>
+
+                            {/* Grid 10 Slot */}
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                {data.gallery.map((file, index) => (
+                                    <div 
+                                        key={index}
+                                        draggable={file !== null}
+                                        onDragStart={() => handleDragStart(index)}
+                                        onDragOver={handleDragOver}
+                                        onDrop={() => handleDrop(index)}
+                                        className={`relative aspect-square border-2 border-dashed rounded-[1.5rem] flex flex-col items-center justify-center overflow-hidden transition-all duration-300
+                                            ${file ? 'border-transparent shadow-md cursor-grab active:cursor-grabbing' : 'border-slate-200 bg-slate-50'}
+                                            ${draggedIndex === index ? 'opacity-40 scale-90' : 'opacity-100'}
+                                        `}
+                                    >
+                                        {file ? (
+                                            <>
+                                                <img 
+                                                    src={URL.createObjectURL(file)} 
+                                                    className="w-full h-full object-cover pointer-events-none" 
+                                                />
+                                                
+                                                {/* Nomor Urut */}
+                                                <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-md text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                                                    {index + 1}
+                                                </div>
+
+                                                {/* Tombol X (Hapus) */}
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => removeImage(index)}
+                                                    className="absolute top-2 right-2 bg-white/90 hover:bg-red-500 hover:text-white text-slate-600 w-6 h-6 flex items-center justify-center rounded-full shadow-sm transition-all z-10"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3.5 h-3.5">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </>
+                                        ) : (
+                                            /* Tampilan Slot Kosong */
+                                            <div className="text-center group">
+                                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest block">Slot {index + 1}</span>
+                                                <span className="text-[8px] font-bold text-slate-300 uppercase block mt-1">Empty</span>
+                                                <input 
+                                                    type="file" 
+                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                    onChange={(e) => {
+                                                        const newGal = [...data.gallery];
+                                                        newGal[index] = e.target.files[0];
+                                                        setData('gallery', newGal);
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
-                            )}
                         </div>
                         <button 
                             type="submit" 

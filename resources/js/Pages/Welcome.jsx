@@ -7,7 +7,9 @@ import {
     ShoppingCart, Package, Search, LogOut, 
     ShieldCheck, SearchX, ArrowRight,
     Star, Instagram, Twitter, MessageCircle,
-    ShoppingBag, Sparkles, Sun, Moon
+     Sparkles, Sun, Moon, ShoppingBag, 
+    ArrowLeft, Clock, CheckCircle2, 
+    ChevronRight
 } from 'lucide-react';
 
 export default function Welcome({ auth, products }) {
@@ -42,7 +44,7 @@ export default function Welcome({ auth, products }) {
     };
 
     const shopName = settings?.shop_name || 'DRYEX SHOP';
-
+    
     const handleLogout = (e) => {
         e.preventDefault();
         router.post(route('logout'));
@@ -76,33 +78,60 @@ export default function Welcome({ auth, products }) {
                                 {shopName.includes(' ') ? ` ${shopName.split(' ').slice(1).join(' ')}` : '.'}
                             </span>
                         </h1>
-                         <ThemeToggle />
+                        <ThemeToggle />
                     </Link>
 
                     <div className="flex items-center gap-6">
                         {auth.user ? (
                             <div className="flex items-center gap-4">
-                                <Link href={route('cart.index')} className="relative p-3 text-slate-600 hover:bg-slate-50 rounded-full transition-all group">
-                                    <ShoppingCart size={22} strokeWidth={1.5} />
-                                    {cart_count > 0 && (
-                                        <span className="absolute top-1.5 right-1.5 bg-red-600 text-white text-[8px] font-black w-5 h-5 flex items-center justify-center rounded-full border-[3px] border-white shadow-lg animate-bounce">
-                                            {cart_count}
-                                        </span>
-                                    )}
-                                </Link>
-                                <Link href="/orders">
-                                    <button className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full font-bold text-[11px] tracking-widest hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-200 transition-all active:scale-95 uppercase">
-                                        Orders
-                                    </button>
-                                </Link>
-                                <Link href={route('dashboard')} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full font-bold text-[11px] tracking-widest hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-200 transition-all active:scale-95 uppercase">
-                                    Dashboard
-                                </Link>
+                                {/* TAMPILAN KHUSUS USER BIASA */}
+                                {auth.user.role === 'user' && (
+                                    <div className="flex items-center gap-3">
+                                        {/* Keranjang Belanja */}
+                                        <Link 
+                                            href={route('cart.index')} 
+                                            className="relative p-3 text-slate-600 hover:bg-slate-50 rounded-full transition-all group"
+                                        >
+                                            <ShoppingCart size={22} strokeWidth={1.5} />
+                                            {cart_count > 0 && (
+                                                <span className="absolute top-1.5 right-1.5 bg-red-600 text-white text-[8px] font-black w-5 h-5 flex items-center justify-center rounded-full border-[3px] border-white shadow-lg animate-bounce">
+                                                    {cart_count}
+                                                </span>
+                                            )}
+                                        </Link>
+
+                                        {/* Tombol Dashboard Utama */}
+                                        <Link href={route('dashboard')}>
+                                            <button className="flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full font-bold text-[11px] tracking-widest hover:bg-blue-600 transition-all active:scale-95 uppercase italic">
+                                                Dashboard
+                                            </button>
+                                        </Link>
+
+                                        {/* Tombol Profile (Dibuat lebih simpel/outline agar tidak balapan dengan Dashboard) */}
+                                        <Link href={route('profile.edit')}>
+                                            <button className="flex items-center gap-2 border border-slate-200 text-slate-600 px-6 py-3 rounded-full font-bold text-[11px] tracking-widest hover:bg-slate-50 transition-all active:scale-95 uppercase">
+                                                Account
+                                            </button>
+                                        </Link>
+                                    </div>
+                                )}
+
+                                {/* TAMPILAN KHUSUS ADMIN */}
+                                {auth.user.role === 'admin' && (
+                                    <Link href={route('admin.dashboard')}>
+                                        <button className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full font-bold text-[11px] tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95 uppercase">
+                                            Admin Panel
+                                        </button>
+                                    </Link>
+                                )}
+
+                                {/* TOMBOL LOGOUT (UNTUK SEMUA ROLE) */}
                                 <button onClick={handleLogout} className="p-3 text-slate-400 hover:text-red-500 transition-colors">
                                     <LogOut size={20} />
                                 </button>
                             </div>
                         ) : (
+                            /* TAMPILAN GUEST (BELUM LOGIN) */
                             <div className="flex items-center gap-3">
                                 <Link href={route('login')} className="font-black text-[11px] tracking-widest text-slate-900 hover:text-blue-600 px-4 py-2 transition-colors uppercase">Login</Link>
                                 <Link href={route('register')} className="bg-slate-900 text-white px-8 py-3.5 rounded-full font-black text-[11px] tracking-widest shadow-xl shadow-slate-200 hover:bg-blue-600 transition-all active:scale-95 uppercase">Join Now</Link>
@@ -272,9 +301,9 @@ function ProductCard({ product, handleAddToCart, onAdd }) {
                             handleAddToCart(product.id);
                         }}
                         className="w-full relative overflow-hidden rounded-2xl py-3 text-[10px] font-semibold tracking-widest uppercase text-white 
-                                   bg-white/10 backdrop-blur-xl border border-white/20
-                                   transition-all duration-300
-                                   hover:scale-[1.04] hover:shadow-[0_10px_30px_rgba(99,102,241,0.4)]"
+                                    bg-white/10 backdrop-blur-xl border border-white/20
+                                    transition-all duration-300
+                                    hover:scale-[1.04] hover:shadow-[0_10px_30px_rgba(99,102,241,0.4)]"
                     >
                         
                         {/* Glow Effect */}

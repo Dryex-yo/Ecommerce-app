@@ -1,162 +1,384 @@
-import UserLayout from '@/Layouts/UserLayout'; // Pastikan path layout Anda benar
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { User, Mail, Lock, Trash2, Save, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import UserLayout from '@/Layouts/UserLayout';
+import { Head, useForm, Link, router, usePage } from '@inertiajs/react';
+import { 
+    User, Mail, ShieldCheck, 
+    MapPin, Bell, CreditCard, Sparkles, Zap, Camera, Plus,
+    Trash2, MapPinned, X, Smartphone
+} from 'lucide-react';
 
-export default function Edit({ auth, mustVerifyEmail, status }) {
-    const user = usePage().props.auth.user;
+// Import Partial AddressCreate secara langsung
+import AddressCreate from './Partials/AddressCreate';
 
-    // Form Update Informasi Profil
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
-        name: user.name,
-        email: user.email,
+export default function Edit({ auth, addresses = [], paymentMethods = [] }) {
+    // Ambil user dari usePage agar data avatar di Header & Sidebar ikut sinkron otomatis
+    const { auth: { user } } = usePage().props;
+    
+    const [activeTab, setActiveTab] = useState('account');
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [editingAddress, setEditingAddress] = useState(null);
+    const [paymentType, setPaymentType] = useState('card'); // 'card' atau 'ewallet'
+    
+    // State untuk kontrol munculnya form tambah alamat
+    const [showAddressForm, setShowAddressForm] = useState(false);
+
+    // 1. Form Identity & Avatar
+    const { data, setData, post, errors, processing } = useForm({
+        name: user.name || '',
+        display_name: user.display_name || '', 
+        email: user.email || '',
+        phone: user.phone || '',               
+        avatar: null,
+        _method: 'PATCH', // PENTING: Untuk spoofing method PATCH saat upload file
     });
 
-    // Form Update Password
-    const passwordForm = useForm({
-        current_password: '',
-        password: '',
-        password_confirmation: '',
+    // 2. Form Payment Method
+    const paymentForm = useForm({
+        type: 'card',
+        brand: '',
+        last4: '',
+        phone_number: '',
+        exp_month: '',
+        exp_year: '',
     });
+
+    // Preview state untuk menampilkan gambar sebelum diupload
+    const [preview, setPreview] = useState(user.avatar_url || null);
+
+    // Update preview jika data user dari server berubah (setelah sukses upload)
+    useEffect(() => {
+        setPreview(user.avatar_url);
+    }, [user.avatar_url]);
+    
+    const handleAvatarChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setData('avatar', file); // Mengirimkan Object File asli
+            setPreview(URL.createObjectURL(file));
+        }
+    };
 
     const updateProfile = (e) => {
         e.preventDefault();
-        patch(route('profile.update'));
-    };
-
-    const updatePassword = (e) => {
-        e.preventDefault();
-        passwordForm.put(route('password.update'), {
-            preserveScroll: true,
-            onSuccess: () => passwordForm.reset(),
+        // Pakai post() karena FormData (upload file) lebih stabil di POST
+        // Laravel akan membacanya sebagai PATCH karena ada field _method di useForm
+        post(route('profile.update'), { 
+            preserveScroll: true, 
+            forceFormData: true, // WAJIB: Agar file tidak dianggap string oleh Laravel
+            onSuccess: () => {
+                setData('avatar', null); // Bersihkan state file setelah sukses
+            },
+            onError: (errors) => console.log('Gagal update:', errors),
         });
     };
 
-    return (
-        <UserLayout user={auth.user}>
-            <Head title="My Account" />
+    const handleEditClick = (address) => {
+        setEditingAddress(address);
+        setShowAddressForm(true); 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
-            <div className="max-w-5xl mx-auto py-12 px-6">
-                <div className="mb-12">
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tighter">My Account</h2>
-                    <p className="text-slate-400 font-medium mt-2 uppercase text-[10px] tracking-[0.2em]">Manage your personal information and security</p>
+    const handleTypeChange = (type) => {
+        setPaymentType(type);
+        paymentForm.setData('type', type);
+        paymentForm.setData('brand', ''); // Reset brand saat ganti tipe
+    };
+
+    const submitPayment = (e) => {
+        e.preventDefault();
+        paymentForm.post(route('payment-methods.store'), {
+            onSuccess: () => {
+                setShowPaymentModal(false);
+                paymentForm.reset();
+            },
+        });
+    };
+
+    const deleteAddress = (id) => {
+        if (confirm('Hapus alamat ini dari daftar pengiriman?')) {
+            router.delete(route('addresses.destroy', id));
+        }
+    };
+
+    const deletePayment = (id) => {
+        if (confirm('Hapus metode pembayaran ini?')) {
+            router.delete(route('payment-methods.destroy', id));
+        }
+    };
+
+    return (
+        <UserLayout user={user}>
+            <Head title="Account Central" />
+
+            <div className="max-w-7xl mx-auto px-6 py-16">
+                <div className="mb-12 animate-in fade-in duration-700">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="text-blue-600" size={16} />
+                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em]">Master Settings</span>
+                    </div>
+                    <h2 className="text-5xl font-black tracking-tighter italic uppercase text-slate-900 leading-none">Account Central</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                    {/* Sidebar Info */}
-                    <div className="space-y-6">
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm text-center">
-                            <div className="w-20 h-20 bg-blue-600 rounded-3xl mx-auto mb-4 flex items-center justify-center text-white shadow-xl shadow-blue-100">
-                                <User size={40} strokeWidth={2.5} />
+                <div className="grid grid-cols-12 gap-8">
+                    {/* LEFT SIDE: Navigation */}
+                    <div className="col-span-12 lg:col-span-4 space-y-8">
+                        <div className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center">
+                            <div className="relative mb-6">
+                                <div className="w-32 h-32 bg-slate-900 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl overflow-hidden relative group/avatar">
+                                    {preview ? (
+                                        <img key={preview} src={preview} alt="Avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-4xl font-black italic">{user.name.charAt(0)}</span>
+                                    )}
+                                    <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer">
+                                        <Camera size={20} className="text-white mb-1" />
+                                        <input type="file" className="hidden" onChange={handleAvatarChange} accept="image/*" />
+                                    </label>
+                                </div>
+                                <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-xl shadow-lg ring-4 ring-white">
+                                    <Zap size={14} fill="currentColor" />
+                                </div>
                             </div>
-                            <h3 className="font-black text-slate-800 text-lg">{user.name}</h3>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">{user.role || 'Member'}</p>
+                            <h3 className="text-2xl font-black text-slate-800 uppercase italic leading-none tracking-tighter">{user.name}</h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3 italic">{user.email}</p>
+                            {/* Error Avatar khusus di bawah foto */}
+                            {errors.avatar && <p className="text-red-500 text-[9px] font-black uppercase italic mt-2">{errors.avatar}</p>}
                         </div>
 
-                        <div className="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-blue-200">
-                            <ShieldCheck className="mb-4 opacity-50" size={32} />
-                            <h4 className="font-black text-lg leading-tight">Keamanan Akun</h4>
-                            <p className="text-blue-100 text-xs mt-2 leading-relaxed">Pastikan Anda menggunakan password yang kuat untuk menjaga keamanan transaksi Anda.</p>
+                        <div className="bg-slate-900 rounded-[2.5rem] p-4 text-white shadow-2xl relative overflow-hidden">
+                            <nav className="space-y-1 relative z-10">
+                                <button onClick={() => setActiveTab('account')} className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeTab === 'account' ? 'bg-white/10 ring-1 ring-white/20' : 'hover:bg-white/5 opacity-50'}`}>
+                                    <div className="flex items-center gap-4">
+                                        <ShieldCheck size={18} className="text-blue-400" />
+                                        <span className="font-bold text-xs uppercase tracking-widest">Account Info</span>
+                                    </div>
+                                </button>
+                                <button onClick={() => setActiveTab('alerts')} className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeTab === 'alerts' ? 'bg-white/10 ring-1 ring-white/20' : 'hover:bg-white/5 opacity-50'}`}>
+                                    <div className="flex items-center gap-4">
+                                        <Bell size={18} className="text-orange-400" />
+                                        <span className="font-bold text-xs uppercase tracking-widest">Alerts Center</span>
+                                    </div>
+                                </button>
+                            </nav>
                         </div>
                     </div>
 
-                    {/* Main Forms */}
-                    <div className="md:col-span-2 space-y-10">
-                        
-                        {/* Update Info */}
-                        <section className="bg-white p-10 rounded-[3rem] border border-slate-50 shadow-sm">
-                            <h3 className="font-black text-xl text-slate-900 mb-8 flex items-center gap-3">
-                                <User className="text-blue-600" size={24} /> Profile Information
-                            </h3>
-                            
-                            <form onSubmit={updateProfile} className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6">
-                                    <InputGroup 
-                                        label="Name" 
-                                        icon={<User size={18}/>} 
-                                        value={data.name} 
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        error={errors.name}
-                                    />
-                                    <InputGroup 
-                                        label="Email Address" 
-                                        icon={<Mail size={18}/>} 
-                                        value={data.email} 
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        error={errors.email}
-                                    />
-                                </div>
-                                <div className="flex items-center gap-4 pt-4">
-                                    <button disabled={processing} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-600 transition-all shadow-lg shadow-slate-100">
-                                        <Save size={16}/> Save Changes
-                                    </button>
-                                    {recentlySuccessful && <p className="text-emerald-500 font-bold text-[10px] uppercase animate-pulse">Saved!</p>}
-                                </div>
-                            </form>
-                        </section>
+                    {/* RIGHT SIDE: Content */}
+                    <div className="col-span-12 lg:col-span-8 space-y-8">
+                        {activeTab === 'account' ? (
+                            <div className="space-y-8">
+                                {/* 1. IDENTITY FORM */}
+                                <section className="bg-white p-10 rounded-[3.5rem] border border-slate-50 shadow-sm">
+                                    <div className="flex items-center gap-4 mb-10">
+                                        <div className="p-4 bg-blue-50 text-blue-600 rounded-[1.5rem]"><User size={24} /></div>
+                                        <h4 className="text-xl font-black italic uppercase text-slate-800">Identity Details</h4>
+                                    </div>
+                                    <form onSubmit={updateProfile} className="space-y-8">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <InputGroup 
+                                                label="Full Name (For Shipping)" 
+                                                value={data.name} 
+                                                onChange={e => setData('name', e.target.value)} 
+                                                icon={<User size={18}/>} 
+                                                error={errors.name} 
+                                                placeholder="e.g. John Doe"
+                                            />
+                                            <InputGroup 
+                                                label="Display Name" 
+                                                value={data.display_name} 
+                                                onChange={e => setData('display_name', e.target.value)} 
+                                                icon={<Zap size={18} className="text-orange-400"/>} 
+                                                error={errors.display_name} 
+                                                placeholder="How should we call you?"
+                                            />
+                                            <InputGroup 
+                                                label="Email Address" 
+                                                value={data.email} 
+                                                onChange={e => setData('email', e.target.value)} 
+                                                icon={<Mail size={18}/>} 
+                                                error={errors.email} 
+                                            />
+                                            <InputGroup 
+                                                label="Phone Number (WhatsApp)" 
+                                                value={data.phone} 
+                                                onChange={e => setData('phone', e.target.value)} 
+                                                icon={<Smartphone size={18}/>} 
+                                                error={errors.phone} 
+                                                placeholder="0812xxxx"
+                                            />
+                                        </div>
+                                        
+                                        <div className="flex justify-end pt-4">
+                                            <button 
+                                                disabled={processing} 
+                                                type="submit"
+                                                className="bg-slate-900 text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-xl disabled:opacity-50 active:scale-95 flex items-center gap-3"
+                                            >
+                                                {processing && <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                                                Update Profile
+                                            </button>
+                                        </div>
+                                    </form>
+                                </section>
 
-                        {/* Update Password */}
-                        <section className="bg-white p-10 rounded-[3rem] border border-slate-50 shadow-sm">
-                            <h3 className="font-black text-xl text-slate-900 mb-8 flex items-center gap-3">
-                                <Lock className="text-blue-600" size={24} /> Update Password
-                            </h3>
-                            
-                            <form onSubmit={updatePassword} className="space-y-6">
-                                <InputGroup 
-                                    label="Current Password" 
-                                    type="password"
-                                    icon={<Lock size={18}/>} 
-                                    value={passwordForm.data.current_password} 
-                                    onChange={(e) => passwordForm.setData('current_password', e.target.value)}
-                                    error={passwordForm.errors.current_password}
-                                />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <InputGroup 
-                                        label="New Password" 
-                                        type="password"
-                                        icon={<ShieldCheck size={18}/>} 
-                                        value={passwordForm.data.password} 
-                                        onChange={(e) => passwordForm.setData('password', e.target.value)}
-                                        error={passwordForm.errors.password}
-                                    />
-                                    <InputGroup 
-                                        label="Confirm New Password" 
-                                        type="password"
-                                        icon={<ShieldCheck size={18}/>} 
-                                        value={passwordForm.data.password_confirmation} 
-                                        onChange={(e) => passwordForm.setData('password_confirmation', e.target.value)}
-                                        error={passwordForm.errors.password_confirmation}
-                                    />
-                                </div>
-                                <div className="flex items-center gap-4 pt-4">
-                                    <button disabled={passwordForm.processing} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-600 transition-all shadow-lg shadow-slate-100">
-                                        <Save size={16}/> Change Password
-                                    </button>
-                                    {passwordForm.recentlySuccessful && <p className="text-emerald-500 font-bold text-[10px] uppercase animate-pulse">Updated!</p>}
-                                </div>
-                            </form>
-                        </section>
+                                {/* 2. ADDRESS LIST */}
+                                <section className="bg-white p-10 rounded-[3.5rem] border border-slate-50 shadow-sm">
+                                    <div className="flex items-center justify-between mb-8">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-4 bg-emerald-50 text-emerald-500 rounded-[1.5rem]"><MapPinned size={24} /></div>
+                                            <h4 className="text-xl font-black italic uppercase text-slate-800">Shipping Addresses</h4>
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                setShowAddressForm(!showAddressForm);
+                                                if(showAddressForm) setEditingAddress(null);
+                                            }} 
+                                            className={`p-3 rounded-xl transition-all ${showAddressForm ? 'bg-red-50 text-red-400' : 'bg-slate-50 text-slate-400 hover:text-emerald-500'}`}
+                                        >
+                                            {showAddressForm ? <X size={20} /> : <Plus size={20} />}
+                                        </button>
+                                    </div>
+                                    
+                                    {showAddressForm && (
+                                        <AddressCreate 
+                                            address={editingAddress}
+                                            onClose={() => {
+                                                setShowAddressForm(false);
+                                                setEditingAddress(null);
+                                            }} 
+                                        />
+                                    )}
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {addresses.length > 0 ? (
+                                            addresses.map((address) => (
+                                                <div key={address.id} className={`p-6 rounded-[2rem] border-2 transition-all group relative ${address.is_default ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-50 bg-white hover:border-blue-100'}`}>
+                                                    <h5 className="font-black text-slate-800 uppercase text-[11px] mb-2 tracking-widest italic">{address.label}</h5>
+                                                    <p className="text-[10px] text-slate-500 font-bold leading-relaxed uppercase pr-8">{address.full_address}, {address.city}</p>
+                                                    
+                                                    <div className="mt-4 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => handleEditClick(address)} className="text-[9px] font-black uppercase text-slate-400 hover:text-blue-600">Edit</button>
+                                                        <button onClick={() => deleteAddress(address.id)} className="text-[9px] font-black uppercase text-red-400 hover:text-red-600">Remove</button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            !showAddressForm && (
+                                                <div className="md:col-span-2 py-12 border-2 border-dashed border-slate-100 rounded-[2rem] flex flex-col items-center justify-center text-slate-300">
+                                                    <MapPin size={32} className="mb-2 opacity-20" />
+                                                    <p className="text-[10px] font-black uppercase tracking-widest italic">No Addresses Saved</p>
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
+                                </section>
+
+                                {/* 3. PAYMENT LIST */}
+                                <section className="bg-slate-900 p-10 rounded-[3.5rem] text-white relative overflow-hidden shadow-2xl">
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-4 mb-8">
+                                            <div className="p-4 bg-white/10 text-white rounded-[1.5rem] backdrop-blur-md"><CreditCard size={24} /></div>
+                                            <h4 className="text-xl font-black italic uppercase tracking-tight">Financial Vault</h4>
+                                        </div>
+                                        
+                                        <div className="space-y-4">
+                                            {paymentMethods.map((method) => (
+                                                <div key={method.id} className="flex items-center justify-between p-6 bg-white/5 border border-white/10 rounded-[1.5rem] hover:bg-white/10 transition-all group">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-12 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-[8px] font-black italic border border-white/10 uppercase text-blue-400">{method.brand}</div>
+                                                        <div>
+                                                            {method.type === 'ewallet' ? (
+                                                                <p className="text-[11px] font-black tracking-[0.1em] text-white">{method.phone_number}</p>
+                                                            ) : (
+                                                                <p className="text-[11px] font-black tracking-[0.2em] text-white">**** **** **** {method.last4}</p>
+                                                            )}
+                                                            <p className="text-[8px] font-bold text-slate-500 uppercase mt-1">
+                                                                {method.type === 'ewallet' ? 'Linked E-Wallet' : `Expires ${method.exp_month}/${method.exp_year}`}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => deletePayment(method.id)} className="text-slate-600 hover:text-red-400 transition-colors"><Trash2 size={16} /></button>
+                                                </div>
+                                            ))}
+                                            <button 
+                                                onClick={() => setShowPaymentModal(true)}
+                                                className="w-full py-5 border-2 border-dashed border-white/10 rounded-[1.5rem] text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 hover:border-white/30 hover:text-white transition-all"
+                                            >
+                                                Add Payment Method
+                                            </button>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        ) : (
+                            <div className="bg-white p-24 rounded-[4rem] border border-slate-50 flex flex-col items-center text-center shadow-sm">
+                                <div className="p-8 bg-slate-50 text-slate-200 rounded-full mb-8"><Bell size={56} /></div>
+                                <h3 className="text-3xl font-black italic uppercase text-slate-800">All Caught Up!</h3>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* MODAL: Add Payment Method */}
+            {showPaymentModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] flex items-center justify-center p-6 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[3.5rem] p-12 w-full max-w-md relative shadow-2xl">
+                        <button onClick={() => setShowPaymentModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900"><X size={24} /></button>
+                        <h3 className="text-3xl font-black italic uppercase text-slate-900 mb-8 tracking-tighter">Link Account</h3>
+                        
+                        <div className="flex gap-4 mb-8">
+                            <button type="button" onClick={() => handleTypeChange('card')} className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase border-2 transition-all ${paymentType === 'card' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}>Card</button>
+                            <button type="button" onClick={() => handleTypeChange('ewallet')} className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase border-2 transition-all ${paymentType === 'ewallet' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}>E-Wallet</button>
+                        </div>
+
+                        <form onSubmit={submitPayment} className="space-y-6">
+                            {paymentType === 'card' ? (
+                                <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
+                                    <InputGroup label="Card Brand" placeholder="Visa / Mastercard" value={paymentForm.data.brand} onChange={e => paymentForm.setData('brand', e.target.value)} error={paymentForm.errors.brand} />
+                                    <InputGroup label="Last 4 Digits" placeholder="1234" maxLength="4" value={paymentForm.data.last4} onChange={e => paymentForm.setData('last4', e.target.value)} error={paymentForm.errors.last4} />
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <InputGroup label="Exp Month" placeholder="01" value={paymentForm.data.exp_month} onChange={e => paymentForm.setData('exp_month', e.target.value)} />
+                                        <InputGroup label="Exp Year" placeholder="2028" value={paymentForm.data.exp_year} onChange={e => paymentForm.setData('exp_year', e.target.value)} />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {['DANA', 'OVO', 'GOPAY'].map(wallet => (
+                                            <button key={wallet} type="button" onClick={() => paymentForm.setData('brand', wallet)} className={`py-4 rounded-xl font-black text-[10px] border-2 transition-all ${paymentForm.data.brand === wallet ? 'border-blue-600 bg-blue-50 text-blue-600' : 'bg-slate-50 border-transparent text-slate-400'}`}>{wallet}</button>
+                                        ))}
+                                    </div>
+                                    <InputGroup label="Phone Number" icon={<Smartphone size={18}/>} placeholder="0812xxxx" value={paymentForm.data.phone_number} onChange={e => paymentForm.setData('phone_number', e.target.value)} error={paymentForm.errors.phone_number} />
+                                </div>
+                            )}
+
+                            <button type="submit" disabled={paymentForm.processing} className="w-full bg-slate-900 text-white py-6 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-blue-600 transition-all shadow-xl active:scale-95">
+                                {paymentForm.processing ? 'Syncing...' : 'Securely Save'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </UserLayout>
     );
 }
 
-// Komponen Input Kecil agar kode tidak berulang
-function InputGroup({ label, icon, value, onChange, error, type = "text" }) {
+function InputGroup({ label, icon, value, onChange, type = "text", error, ...props }) {
     return (
-        <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{label}</label>
+        <div className="group w-full">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1 group-focus-within:text-blue-600 transition-colors">{label}</label>
             <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">{icon}</div>
-                <input
-                    type={type}
-                    className="w-full bg-slate-50 border-none rounded-2xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-blue-100 transition-all font-bold text-slate-700"
-                    value={value}
+                {icon && <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors">{icon}</div>}
+                <input 
+                    type={type} 
+                    className={`w-full bg-slate-50 border-2 border-transparent rounded-2xl ${icon ? 'pl-14' : 'px-6'} pr-6 py-5 focus:bg-white focus:border-blue-100 transition-all font-bold text-slate-700 outline-none placeholder:text-slate-300`} 
+                    value={value} 
                     onChange={onChange}
+                    {...props}
                 />
             </div>
-            {error && <p className="text-red-500 text-[10px] font-bold mt-2 ml-1 uppercase italic tracking-wide">{error}</p>}
+            {error && <p className="text-red-500 text-[9px] font-black uppercase italic mt-2 ml-1">{error}</p>}
         </div>
     );
 }

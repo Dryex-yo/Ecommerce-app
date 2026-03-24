@@ -26,7 +26,7 @@ export default function ProductShow({ auth, product }) {
 
             <div className="max-w-7xl mx-auto px-6 py-12">
                 {/* Tombol Kembali */}
-                <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors mb-8 font-bold text-sm uppercase tracking-widest">
+                <Link href="/shop" className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors mb-8 font-bold text-sm uppercase tracking-widest">
                     <ArrowLeft size={16} /> Kembali Belanja
                 </Link>
 

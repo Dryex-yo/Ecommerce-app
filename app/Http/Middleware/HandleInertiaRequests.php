@@ -44,7 +44,18 @@ class HandleInertiaRequests extends Middleware
                 ...parent::share($request),
                 
                 'auth' => [
-                    'user' => $request->user(),
+                    'user' => $request->user() ? [
+                        'id' => $request->user()->id,
+                        'name' => $request->user()->name,
+                        'display_name' => $request->user()->display_name, 
+                        'email' => $request->user()->email,
+                        'phone' => $request->user()->phone,               
+                        'avatar_url' => $request->user()->avatar ? asset('storage/' . $request->user()->avatar) : null,
+                    ] : null,
+                    'wishlistCount' => $request->user() 
+                    ? $request->user()->wishlists()->count() 
+                    : 0,
+                    'myOrdersCount' => $request->user() ? $request->user()->orders()->count() : 0,
                 ],
 
                 'settings' => [

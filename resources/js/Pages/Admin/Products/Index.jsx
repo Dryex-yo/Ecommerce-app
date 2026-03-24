@@ -5,15 +5,14 @@ import { Plus, Edit, Trash2, Package, ShoppingBag } from 'lucide-react';
 
 export default function Index({ auth, products = [] }) {
     
-    // Fungsi untuk menghapus produk
     const handleDelete = (id) => {
-        if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
-            router.delete(route('products.destroy', id));
-        }
+            if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+                router.delete(route('admin.products.destroy', id));
+            }
     };
 
     return (
-        <AdminLayout user={auth.user}>
+<AdminLayout user={auth.user}>
             <Head title="Inventory Produk" />
 
             {/* Header Section */}
@@ -33,104 +32,103 @@ export default function Index({ auth, products = [] }) {
             
             {/* Table Section */}
             <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-slate-50/50">
-                            <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Product</th>
-                            <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
-                            <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Price</th>
-                            <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock</th>
-                            <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {products.length > 0 ? (
-                            products.map((product) => (
-                                <tr key={product.id} className="hover:bg-slate-50/30 transition-colors group">
-                                    {/* Info Produk */}
-                                    <td className="p-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all">
-                                                {product.image ? (
-                                                    <img 
-                                                        src={`/storage/${product.image}`} 
-                                                        className="w-full h-full object-cover" 
-                                                        alt={product.name} 
-                                                        onError={(e) => { e.target.src = 'https://placehold.co/100x100?text=No+Image' }}
-                                                    />
-                                                ) : (
-                                                    <Package size={20} />
-                                                )}
+                <div className="overflow-x-auto"> {/* Tambahkan wrapper agar aman di layar kecil */}
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Product</th>
+                                <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
+                                <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Price</th>
+                                <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock</th>
+                                <th className="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            {products.length > 0 ? (
+                                products.map((product) => (
+                                    <tr key={product.id} className="hover:bg-slate-50/30 transition-colors group">
+                                        <td className="p-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-slate-100 rounded-2xl overflow-hidden flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all">
+                                                    {product.image ? (
+                                                        <img 
+                                                            src={`/storage/${product.image}`} 
+                                                            className="w-full h-full object-cover" 
+                                                            alt={product.name} 
+                                                            onError={(e) => { e.target.src = 'https://placehold.co/100x100?text=No+Image' }}
+                                                        />
+                                                    ) : (
+                                                        <Package size={20} />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-slate-700">{product.name}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase">{product.slug}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="font-bold text-slate-700">{product.name}</p>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase">{product.slug}</p>
-                                            </div>
-                                        </div>
-                                    </td>
+                                        </td>
 
-                                    {/* Kategori */}
-                                    <td className="p-6">
-                                        <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full text-[11px]">
-                                            {product.category}
-                                        </span>
-                                    </td>
-
-                                    {/* Harga */}
-                                    <td className="p-6 font-black text-slate-700">
-                                        Rp {new Intl.NumberFormat('id-ID').format(product.price)}
-                                    </td>
-
-                                    {/* Stok */}
-                                    <td className="p-6">
-                                        <div className="flex flex-col gap-1">
-                                            <span className={`text-xs font-black ${product.stock < 10 ? 'text-orange-500' : 'text-blue-600'}`}>
-                                                {product.stock} pcs
+                                        {/* PERBAIKAN DI SINI: Render product.category.name, bukan objeknya */}
+                                        <td className="p-6">
+                                            <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full text-[11px]">
+                                                {product.category?.name || 'Uncategorized'}
                                             </span>
-                                            <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div 
-                                                    className={`h-full ${product.stock < 10 ? 'bg-orange-500' : 'bg-blue-600'}`} 
-                                                    style={{ width: `${Math.min(product.stock, 100)}%` }}
-                                                ></div>
+                                        </td>
+
+                                        <td className="p-6 font-black text-slate-700">
+                                            Rp {new Intl.NumberFormat('id-ID').format(product.price)}
+                                        </td>
+
+                                        <td className="p-6">
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`text-xs font-black ${product.stock < 10 ? 'text-orange-500' : 'text-blue-600'}`}>
+                                                    {product.stock} pcs
+                                                </span>
+                                                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className={`h-full ${product.stock < 10 ? 'bg-orange-500' : 'bg-blue-600'}`} 
+                                                        style={{ width: `${Math.min(product.stock, 100)}%` }}
+                                                    ></div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
+                                        </td>
 
-                                    {/* Tombol Aksi */}
-                                    <td className="p-6 text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Link 
-                                                href={route('admin.products.edit', product.id)} 
-                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                                                title="Edit Produk"
-                                            >
-                                                <Edit size={18} />
-                                            </Link>
+                                        <td className="p-6 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Link 
+                                                    href={route('admin.products.edit', product.id)} 
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                                                    title="Edit Produk"
+                                                >
+                                                    <Edit size={18} />
+                                                </Link>
 
-                                            <button 
-                                                onClick={() => handleDelete(product.id)}
-                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                                title="Hapus Produk"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => handleDelete(product.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                                    title="Hapus Produk"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="5" className="p-20 text-center">
+                                        <div className="flex flex-col items-center">
+                                            <ShoppingBag size={48} className="text-slate-200 mb-3" />
+                                            <h3 className="text-lg font-bold text-slate-400">Belum Ada Produk</h3>
+                                            <p className="text-sm text-slate-300">Klik "Add New Product" untuk mulai mengisi etalase.</p>
                                         </div>
                                     </td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="5" className="p-20 text-center">
-                                    <div className="flex flex-col items-center">
-                                        <ShoppingBag size={48} className="text-slate-200 mb-3" />
-                                        <h3 className="text-lg font-bold text-slate-400">Belum Ada Produk</h3>
-                                        <p className="text-sm text-slate-300">Klik "Add New Product" untuk mulai mengisi etalase.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </AdminLayout>
     );

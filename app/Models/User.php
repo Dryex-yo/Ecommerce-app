@@ -15,9 +15,12 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'display_name',
         'email',
+        'phone',
         'password',
-        'role', // PENTING: Tambahkan ini agar role bisa diisi
+        'role',
+        'avatar', // Tambahkan ini agar fitur upload foto profil berfungsi
     ];
 
     protected $hidden = [
@@ -47,5 +50,37 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    /**
+     * Relasi ke Wishlist.
+     */
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    /**
+     * Relasi ke Alamat pengiriman.
+     */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    /**
+     * Relasi ke Metode Pembayaran.
+     */
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+    
+    /**
+     * Aksesor untuk URL Avatar (Opsional tapi berguna).
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? asset('storage/' . $this->avatar) : null;
     }
 }

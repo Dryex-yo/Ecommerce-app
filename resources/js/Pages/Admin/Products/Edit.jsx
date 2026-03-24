@@ -127,17 +127,20 @@ export default function Edit({ auth, product }) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Category</label>
-                            <select 
-                                value={data.category}
-                                onChange={e => setData('category', e.target.value)}
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-100 font-bold text-slate-700"
-                            >
-                                <option value="">Select Category</option>
-                                <option value="Shoes">Shoes</option>
-                                <option value="Electronics">Electronics</option>
-                                <option value="Apparel">Apparel</option>
-                            </select>
+                            <label className="block mb-2">Kategori</label>
+                                <input
+                                    type="text"
+                                    list="categoryOptions"
+                                    value={data.category_name}
+                                    onChange={e => setData('category_name', e.target.value)}
+                                    className="w-full border rounded-lg p-2"
+                                    placeholder="Ketik kategori baru atau pilih yang ada..."
+                                />
+                                <datalist id="categoryOptions">
+                                    {categories.map((cat) => (
+                                        <option key={cat.id} value={cat.name} />
+                                    ))}
+                                </datalist>
                         </div>
 
                         <div>

@@ -16,13 +16,31 @@ use Inertia\Inertia;
 
 class CartController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Menggunakan Auth::id() lebih aman
-        return Inertia::render('Cart/Index', [
-            'cartItems' => Cart::with('product')
-                ->where('user_id', Auth::id())
-                ->get()
+        $cartItems = \App\Models\Cart::where('user_id', Auth::id())
+            ->with(['product.category']) // TARIK RELASI CATEGORY JUGA
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'quantity' => $item->quantity,
+                    'product' => [
+                        'id' => $item->product->id,
+                        'name' => $item->product->name,
+                        'price' => $item->product->price,
+                        // PERBAIKAN GAMBAR:
+                        'image_url' => $item->product->image 
+                            ? asset('storage/' . $item->product->image) 
+                            : null,
+                        // TARIK NAMA KATEGORI:
+                        'category_name' => $item->product->category ? $item->product->category->name : 'Uncategorized',
+                    ]
+                ];
+            });
+
+        return Inertia::render('User/Cart', [
+            'cartItems' => $cartItems
         ]);
     }
 

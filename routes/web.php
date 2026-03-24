@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 // --- CONTROLLERS ---
+use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\AddressController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\User\ProfileController;
 use App\Http\Controllers\User\CartController;
 use App\Http\Controllers\Shop\ProductController as ShopProductController;
@@ -48,11 +51,7 @@ Route::get('/', function (Request $request) {
     ]);
 })->name('welcome');
 
-Route::get('/shop', function () {
-    return Inertia::render('Shop/Index', [
-        'products' => Product::where('stock', '>', 0)->latest()->get(),
-    ]);
-})->name('shop.index');
+Route::get('/shop', [ShopProductController::class, 'index'])->name('shop.index');
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
@@ -62,35 +61,44 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
 // --------------------------------------------------------------------------   
 // AUTHENTICATED ROUTES (General)
 // --------------------------------------------------------------------------
-Route::middleware(['auth', 'verified'])->group(function () {
-    
-    // Logic Pengalihan Dashboard: 
-    // Jika admin ke /admin/dashboard, jika user ke / (atau halaman lain)
-Route::get('/dashboard', function () {
-    // Gunakan Static Method dari Class Auth, ini lebih stabil daripada helper auth()
-    if (Auth::check()) {
-        $user = Auth::user();
+    Route::middleware(['auth', 'verified'])->group(function () {
         
-        // Cek role dengan aman
+        // Logic Pengalihan Dashboard: 
+        // Jika admin ke /admin/dashboard, jika user ke / (atau halaman lain)
+    Route::get('/dashboard', function () {
+        $user = Auth::user();
+
+        // 1. Jika dia Admin, lempar ke Dashboard Admin (di folder Admin)
         if ($user && $user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
-    }
 
-    // Jika gagal atau bukan admin, lempar ke welcome
-    return redirect()->route('welcome');
-})->name('dashboard');
+        // 2. Jika dia User biasa, tampilkan file Dashboard.jsx yang ada di folder Pages
+        return Inertia::render('Dashboard', [
+            'user' => $user
+        ]);
+    })->name('dashboard');
     
     Route::get('/shop/product/{id}', [ShopProductController::class, 'show'])->name('shop.product.show');    
-    Route::get('/my-orders', [AdminOrderController::class, 'index'])->name('orders.index'); 
-
-    // Profile Management
+    Route::get('/my-orders', function () {
+        return Inertia::render('User/Orders', [ // <--- Arahkan ke folder User
+            'orders' => Auth::user()->orders // Atau ambil dari controller
+        ]);
+    })->name('orders.index');    // Profile Management
     Route::controller(ProfileController::class)->group(function () {
         Route::get('/profile', 'edit')->name('profile.edit');
         Route::patch('/profile', 'update')->name('profile.update');
         Route::delete('/profile', 'destroy')->name('profile.destroy');
     });
 
+    // Alamat
+    Route::resource('addresses', AddressController::class);
+    Route::patch('/addresses/{address}', [AddressController::class, 'update'])->name('addresses.update');
+    
+    // Pembayaran (Cukup store dan destroy dulu)
+    Route::post('/payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
+    Route::delete('/payment-methods/{id}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+    
     // Cart Management
     Route::controller(CartController::class)->group(function () {
         Route::get('/cart', 'index')->name('cart.index');
@@ -99,6 +107,9 @@ Route::get('/dashboard', function () {
         Route::delete('/cart/{id}', 'destroy')->name('cart.destroy');
         Route::post('/checkout', 'checkout')->name('cart.checkout');
     });
+
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/{productId}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 });
 
 // --------------------------------------------------------------------------

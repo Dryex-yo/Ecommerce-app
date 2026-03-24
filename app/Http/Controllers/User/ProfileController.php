@@ -22,23 +22,61 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'addresses' => $request->user()->addresses,
+            'paymentMethods' => $request->user()->paymentMethods,
         ]);
     }
 
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request)
     {
-        $request->user()->fill($request->validated());
+        // 1. Validasi data yang masuk
+        $validated = $request->validate([
+            'name'         => 'required|string|max:255',
+            'display_name' => 'nullable|string|max:255',
+            'email'        => 'required|email|max:255|unique:users,email,' . $request->user()->id,
+            'phone'        => 'nullable|string|max:20',
+            'avatar'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user = $request->user();
+
+        // 2. Update data teks
+        $user->name = $request->name;
+        $user->display_name = $request->display_name;
+        $user->email = $request->email;
+        $user->phone = $request->phone;
+
+        // 3. Handle Upload Avatar (Jika ada)
+        if ($request->hasFile('avatar')) {
+            // Hapus file lama (Hanya jika ada dan filenya memang eksis)
+            // Gunakan Storage::disk('public')->delete agar lebih bersih dan aman daripada unlink
+            if ($user->avatar) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+
+            // Simpan file baru
+            // store('avatars', 'public') akan menghasilkan path seperti: avatars/namafile.jpg
+            $path = $request->file('avatar')->store('avatars', 'public');
+            
+            // Simpan PATH-nya saja ke database
+            $user->avatar = $path; 
         }
 
-        $request->user()->save();
+        // 4. Update field lainnya
+        $user->fill([
+            'name' => $request->name,
+            'display_name' => $request->display_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
 
-        return Redirect::route('profile.edit');
+        $user->save();
+
+        // Gunakan redirect()->back() agar Inertia me-refresh props secara otomatis
+        return redirect()->back()->with('success', 'Profile updated successfully!');
     }
 
     /**

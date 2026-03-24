@@ -54,7 +54,7 @@ export default function Index({ auth, cartItems }) {
                             </p>
                         </div>
                     </div>
-                    <Link href="/" className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                    <Link href="/shop" className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-slate-900 flex items-center gap-2 transition-colors">
                         <ArrowLeft size={14} /> Lanjut Belanja
                     </Link>
                 </div>
@@ -69,20 +69,21 @@ export default function Index({ auth, cartItems }) {
                                     {/* Image Container */}
                                     <div className="w-32 h-32 rounded-3xl overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0">
                                         <img 
-                                            src={`${item.product.image}`} 
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                                            alt={item.product.name} 
+                                            src={item.product.image_url} 
+                                            alt={item.product.name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { e.target.src = '/images/placeholder.png' }} 
                                         />
                                     </div>
                                     
                                     {/* Product Info */}
                                     <div className="flex-1 text-center sm:text-left">
-                                        <span className="text-[9px] font-black text-blue-500 uppercase tracking-[0.2em] mb-1 block">
-                                            {item.product.category || 'General'}
-                                        </span>
                                         <h3 className="font-black text-slate-800 text-xl tracking-tight leading-tight mb-2">
                                             {item.product.name}
                                         </h3>
+                                        <span className="text-[10px] font-black uppercase text-blue-600 tracking-widest">
+                                            {item.product.category_name}
+                                        </span>
                                         <p className="text-blue-600 font-black text-lg">
                                             {formatIDR(item.product.price)}
                                         </p>
@@ -172,7 +173,7 @@ export default function Index({ auth, cartItems }) {
                         <p className="text-slate-400 font-medium mb-10 max-w-sm mx-auto leading-relaxed">
                             Sepertinya Anda belum menemukan produk yang cocok. Yuk, jelajahi koleksi terbaik kami sekarang.
                         </p>
-                        <Link href="/" className="inline-flex bg-blue-600 text-white px-12 py-5 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-slate-900 hover:shadow-2xl hover:shadow-blue-100 transition-all active:scale-95">
+                        <Link href="/shop" className="inline-flex bg-blue-600 text-white px-12 py-5 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-slate-900 hover:shadow-2xl hover:shadow-blue-100 transition-all active:scale-95">
                             Mulai Belanja Sekarang
                         </Link>
                     </div>
