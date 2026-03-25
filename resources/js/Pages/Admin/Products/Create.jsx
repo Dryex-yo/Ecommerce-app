@@ -7,6 +7,7 @@ export default function Create({ auth, categories }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         category_id: '',
+        category_name: '',
         price: '',
         stock: '',
         description: '',
