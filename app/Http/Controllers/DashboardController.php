@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Wishlist;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -61,10 +62,7 @@ class DashboardController extends Controller
             'recentOrders'    => $this->getRecentOrders($user),
             'recommendations' => $this->getRecommendations(),
 
-            'settings' => [
-                'shop_name'  => config('app.shop_name', 'ELECTRICAL STYLES'),
-                'shop_email' => config('app.shop_email', 'contact@dryshop.local'),
-            ],
+            'settings' => $this->getSettings(),
         ]);
     }
 
@@ -114,6 +112,17 @@ class DashboardController extends Controller
             ->limit(3)
             ->get(['id', 'name', 'price', 'image', 'stock']) // Ambil kolom perlu saja
             ->toArray();
+    }
+
+    private function getSettings(): array
+    {
+        $dbSettings = Setting::pluck('value', 'key')->toArray();
+        
+        return [
+            'shop_name' => $dbSettings['shop_name'] ?? 'DRYEX SHOP',
+            'shop_logo' => isset($dbSettings['shop_logo']) ? asset('storage/' . $dbSettings['shop_logo']) : null,
+            'shop_email' => $dbSettings['shop_email'] ?? null,
+        ];
     }
 
     private function calculateAccountHealth(User $user): int

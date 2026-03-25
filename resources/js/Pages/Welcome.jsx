@@ -53,13 +53,13 @@ export default function Welcome({ auth, products }) {
         }
 
         if (selectedCategory !== 'all') {
-            filtered = filtered.filter(p => p.category === selectedCategory);
+            filtered = filtered.filter(p => p.category?.name === selectedCategory);
         }
 
         setFilteredProducts(filtered);
     }, [searchQuery, selectedCategory, products]);
     
-    const categories = ['all', ...new Set(products.filter(p => p.category).map(p => p.category))];
+    const categories = ['all', ...new Set(products.filter(p => p.category).map(p => p.category?.name))];
     
     const handleAddToCart = (productId) => {
         router.post(route('cart.store'), { 
@@ -548,7 +548,7 @@ function ProductCard({ product, handleAddToCart, onAdd }) {
                 
                 {/* Category */}
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer w-fit">
-                    {product.category}
+                    {product.category?.name || 'No Category'}
                 </span>
 
                 {/* Price */}

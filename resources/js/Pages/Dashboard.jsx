@@ -21,7 +21,8 @@ export default function UserDashboard() {
     const user = auth.user;
     const myOrdersCount = auth.myOrdersCount || 0;
     const wishlistCount = auth.wishlistCount || 0;
-    const shopName = settings?.shop_name || 'ELECTRICAL STYLES';
+    const shopName = settings?.shop_name || '';
+    const shopLogo = settings?.shop_logo;
     const totalSpent = auth.totalSpent || 0;
     const memberSince = user.created_at || new Date();
     
@@ -126,6 +127,24 @@ export default function UserDashboard() {
                 {/* HEADER SECTION */}
                 <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="animate-in fade-in slide-in-from-left duration-700">
+                        <div className="flex items-center gap-4 mb-6">
+                            {shopLogo && (
+                                <div className="h-16 w-16 bg-white rounded-2xl border border-slate-100 shadow-md flex items-center justify-center overflow-hidden">
+                                    <img 
+                                        src={shopLogo} 
+                                        alt={shopName} 
+                                        className="max-h-14 max-w-14 object-contain"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                        }}
+                                    />
+                                </div>
+                            )}
+                            <div className="flex flex-col">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Shop Info</p>
+                                <h3 className="text-lg font-black text-slate-800 uppercase italic">{shopName}</h3>
+                            </div>
+                        </div>
                         <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4">
                             <Sparkles size={14} fill="currentColor" /> 
                             Status: {user.role === 'admin' ? 'Administrator' : 'Customer'} • {tier.name}

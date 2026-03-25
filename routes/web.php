@@ -47,7 +47,7 @@ Route::get('/', function (Request $request) {
     );
 
     return Inertia::render('Welcome', [
-        'products' => Product::latest()->take(10)->get(),
+        'products' => Product::with('category')->latest()->take(10)->get(),
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
     ]);

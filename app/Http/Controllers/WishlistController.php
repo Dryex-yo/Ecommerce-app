@@ -17,6 +17,10 @@ class WishlistController extends Controller
             ->with('product.category') 
             ->latest()
             ->get()
+            ->filter(function ($item) {
+                // Hapus item jika product sudah dihapus
+                return $item->product !== null;
+            })
             ->map(function ($item) {
                 // Kita modifikasi object product-nya di sini
                 if ($item->product) {
@@ -25,7 +29,8 @@ class WishlistController extends Controller
                         : asset('images/placeholder.png'); // Fallback jika tidak ada gambar
                 }
                 return $item;
-            });
+            })
+            ->values(); // Reset index
 
         return Inertia::render('User/Wishlist', [
             'wishlistItems' => $wishlistItems
