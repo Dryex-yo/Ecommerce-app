@@ -85,7 +85,7 @@ export default function Welcome({ auth, products }) {
                         {auth.user ? (
                             <div className="flex items-center gap-4">
                                 {/* TAMPILAN KHUSUS USER BIASA */}
-                                {auth.user.role === 'user' && (
+                                {auth.user?.role === 'user' && (
                                     <div className="flex items-center gap-3">
                                         {/* Keranjang Belanja */}
                                         <Link 
@@ -280,7 +280,7 @@ function ProductCard({ product, handleAddToCart, onAdd }) {
                 <Link href={route('shop.product.show', product.id)} className="block w-full h-full">
                     {product.image ? (
                         <img 
-                            src={`${product.image}`} 
+                            src={`/storage/${product.image}`} 
                             className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover/card:opacity-100" 
                             alt={product.name} 
                         />

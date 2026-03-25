@@ -84,7 +84,9 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
         return Inertia::render('User/Orders', [ // <--- Arahkan ke folder User
             'orders' => Auth::user()->orders // Atau ambil dari controller
         ]);
-    })->name('orders.index');    // Profile Management
+    })->name('orders.index');    
+    
+    // Profile Management
     Route::controller(ProfileController::class)->group(function () {
         Route::get('/profile', 'edit')->name('profile.edit');
         Route::patch('/profile', 'update')->name('profile.update');

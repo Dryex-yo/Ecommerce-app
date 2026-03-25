@@ -22,12 +22,13 @@ class ProductFactory extends Factory
     $name = fake()->words(3, true);
 
     return [
+        'category_id' => \App\Models\Category::factory(),
         'name' => $name,
         'slug' => Str::slug($name . '-' . fake()->unique()->numberBetween(1, 9999)),
         'description' => fake()->sentence(),
         'price' => fake()->numberBetween(10000, 1000000),
         'image' => 'https://picsum.photos/400?random=' . rand(1, 1000),
         'stock' => fake()->numberBetween(1, 100),
-    ];
+        ];
     }
 }
