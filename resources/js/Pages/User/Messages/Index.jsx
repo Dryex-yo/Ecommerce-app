@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserLayout from '@/Layouts/UserLayout';
-import { Head, usePage, useForm } from '@inertiajs/react';
-import { MessageSquare, Send, Clock, RefreshCw, AlertCircle } from 'lucide-react';
+import { Head, usePage, useForm, Link } from '@inertiajs/react';
+import { MessageSquare, Send, Clock, RefreshCw, AlertCircle, ShoppingBag, ExternalLink, Package, CreditCard } from 'lucide-react';
 
 const TimeDisplay = ({ timestamp }) => {
     const [displayTime, setDisplayTime] = useState('');
@@ -29,6 +29,99 @@ const TimeDisplay = ({ timestamp }) => {
     }, [timestamp]);
 
     return <span>{displayTime || 'Sedang dimuat...'}</span>;
+};
+
+const formatCurrency = (amount) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+
+const getOrderStatusBadge = (status) => {
+    const map = {
+        pending:    { cls: 'bg-amber-100 text-amber-700',     label: 'Menunggu' },
+        processing: { cls: 'bg-blue-100 text-blue-700',       label: 'Diproses' },
+        shipped:    { cls: 'bg-purple-100 text-purple-700',   label: 'Dikirim' },
+        delivered:  { cls: 'bg-emerald-100 text-emerald-700', label: 'Selesai' },
+        cancelled:  { cls: 'bg-red-100 text-red-700',         label: 'Dibatalkan' },
+    };
+    const s = map[status] || { cls: 'bg-slate-100 text-slate-700', label: status };
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${s.cls}`}>
+            {s.label}
+        </span>
+    );
+};
+
+// ==== UserOrderCard ====
+const UserOrderCard = ({ order }) => {
+    if (!order) return null;
+
+    return (
+        <div className="mx-4 mb-3 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600">
+                <div className="flex items-center gap-2">
+                    <ShoppingBag size={14} className="text-white" />
+                    <span className="text-white font-black text-[10px] uppercase tracking-wider">Pesanan Terbaru Anda</span>
+                </div>
+                {getOrderStatusBadge(order.status)}
+            </div>
+
+            {/* Body */}
+            <div className="p-4 space-y-3">
+                {/* Order Number + Payment */}
+                <div className="flex items-start justify-between gap-2">
+                    <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">No. Pesanan</p>
+                        <p className="font-black text-slate-800 text-[12px]">#{order.order_number}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">Pembayaran</p>
+                        <div className="flex items-center gap-1 justify-end">
+                            <CreditCard size={10} className="text-slate-500" />
+                            <p className="font-bold text-slate-700 text-[10px] uppercase">{order.payment_method ?? '-'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Items Summary */}
+                {order.items_summary && order.items_summary.length > 0 && (
+                    <div className="rounded-xl bg-white border border-slate-100 divide-y divide-slate-50">
+                        {order.items_summary.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between px-3 py-2">
+                                <div className="flex items-center gap-2">
+                                    <Package size={11} className="text-blue-400 flex-shrink-0" />
+                                    <p className="text-[10px] font-semibold text-slate-700 truncate max-w-[130px]">{item.name}</p>
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                    <p className="text-[9px] text-slate-400">x{item.qty}</p>
+                                    <p className="text-[10px] font-bold text-slate-700">{formatCurrency(item.price)}</p>
+                                </div>
+                            </div>
+                        ))}
+                        {order.items_count > 3 && (
+                            <p className="px-3 py-1.5 text-[9px] font-bold text-slate-400 text-center">
+                                +{order.items_count - 3} item lainnya
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {/* Total + Action */}
+                <div className="flex items-center justify-between pt-1">
+                    <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">Total</p>
+                        <p className="font-black text-blue-700 text-[14px]">{formatCurrency(order.total_price)}</p>
+                    </div>
+                    <Link
+                        href={route('orders.show', order.id)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wide transition-all active:scale-95 shadow-sm"
+                    >
+                        <ExternalLink size={12} />
+                        Lihat Pesanan
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default function CustomerMessagesIndex() {
@@ -169,11 +262,18 @@ export default function CustomerMessagesIndex() {
                                                     <p className="font-black text-slate-800 text-[12px] truncate">Admin Dryshop</p>
                                                     <p className="text-slate-600 text-[10px] font-medium mt-1 line-clamp-1">{chat.last_message}</p>
                                                 </div>
-                                                {unreadCount > 0 && (
-                                                    <span className="flex-shrink-0 w-5 h-5 bg-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-pulse">
-                                                        {unreadCount}
-                                                    </span>
-                                                )}
+                                                <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                                                    {unreadCount > 0 && (
+                                                        <span className="w-5 h-5 bg-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-pulse">
+                                                            {unreadCount}
+                                                        </span>
+                                                    )}
+                                                    {chat.order && (
+                                                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-100 text-blue-600 rounded-full text-[8px] font-black">
+                                                            <ShoppingBag size={9} /> Order
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="flex items-center justify-between mt-2">
                                                 {getStatusBadge(chat.status)}
@@ -201,28 +301,33 @@ export default function CustomerMessagesIndex() {
                                 </div>
 
                                 {/* Messages Area */}
-                                <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-slate-50 to-white custom-scrollbar">
-                                    {activeChat.messages && activeChat.messages.length > 0 ? (
-                                        activeChat.messages.map((msg) => (
-                                            <div
-                                                key={msg.id}
-                                                className={`flex ${msg.sender === 'customer' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}
-                                            >
-                                                <div className={`max-w-xs px-4 py-3 rounded-2xl ${
-                                                    msg.sender === 'customer'
-                                                        ? 'bg-blue-600 text-white rounded-tr-none'
-                                                        : 'bg-slate-100 text-slate-800 rounded-tl-none'
-                                                }`}>
-                                                    <p className="text-[12px] font-medium">{msg.text}</p>
-                                                    <p className={`text-[9px] font-bold mt-1 ${msg.sender === 'customer' ? 'text-blue-100' : 'text-slate-400'}`}>
-                                                        <TimeDisplay timestamp={msg.timestamp || msg.created_at} />
-                                                    </p>
+                                <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50 to-white custom-scrollbar">
+                                    {/* Order Card — User View */}
+                                    <UserOrderCard order={activeChat.order} />
+
+                                    <div className="px-6 pb-6 space-y-4">
+                                        {activeChat.messages && activeChat.messages.length > 0 ? (
+                                            activeChat.messages.map((msg) => (
+                                                <div
+                                                    key={msg.id}
+                                                    className={`flex ${msg.sender === 'customer' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}
+                                                >
+                                                    <div className={`max-w-xs px-4 py-3 rounded-2xl ${
+                                                        msg.sender === 'customer'
+                                                            ? 'bg-blue-600 text-white rounded-tr-none'
+                                                            : 'bg-slate-100 text-slate-800 rounded-tl-none'
+                                                    }`}>
+                                                        <p className="text-[12px] font-medium">{msg.text}</p>
+                                                        <p className={`text-[9px] font-bold mt-1 ${msg.sender === 'customer' ? 'text-blue-100' : 'text-slate-400'}`}>
+                                                            <TimeDisplay timestamp={msg.timestamp || msg.created_at} />
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-slate-400 text-[10px] font-bold text-center">Belum ada pesan</p>
-                                    )}
+                                            ))
+                                        ) : (
+                                            <p className="text-slate-400 text-[10px] font-bold text-center">Belum ada pesan</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Input Area */}

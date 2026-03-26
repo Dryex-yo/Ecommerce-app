@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, usePage, useForm } from '@inertiajs/react';
-import { MessageSquare, Send, AlertCircle, Clock, RefreshCw } from 'lucide-react';
+import { Head, usePage, useForm, Link } from '@inertiajs/react';
+import { MessageSquare, Send, AlertCircle, Clock, RefreshCw, ShoppingBag, ExternalLink, Package, CreditCard } from 'lucide-react';
 
 const TimeDisplay = ({ timestamp }) => {
     const [displayTime, setDisplayTime] = useState('');
@@ -24,11 +24,104 @@ const TimeDisplay = ({ timestamp }) => {
         };
 
         updateTime();
-        const interval = setInterval(updateTime, 30000); // Update setiap 30 detik
+        const interval = setInterval(updateTime, 30000);
         return () => clearInterval(interval);
     }, [timestamp]);
 
     return <span>{displayTime || 'Sedang dimuat...'}</span>;
+};
+
+const formatCurrency = (amount) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+
+const getOrderStatusBadge = (status) => {
+    const map = {
+        pending:    { cls: 'bg-amber-100 text-amber-700',   label: 'Menunggu' },
+        processing: { cls: 'bg-blue-100 text-blue-700',     label: 'Diproses' },
+        shipped:    { cls: 'bg-purple-100 text-purple-700', label: 'Dikirim' },
+        delivered:  { cls: 'bg-emerald-100 text-emerald-700', label: 'Selesai' },
+        cancelled:  { cls: 'bg-red-100 text-red-700',       label: 'Dibatalkan' },
+    };
+    const s = map[status] || { cls: 'bg-slate-100 text-slate-700', label: status };
+    return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${s.cls}`}>
+            {s.label}
+        </span>
+    );
+};
+
+// ==== AdminOrderCard ====
+const AdminOrderCard = ({ order }) => {
+    if (!order) return null;
+
+    return (
+        <div className="mx-4 mb-3 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-600 to-blue-600">
+                <div className="flex items-center gap-2">
+                    <ShoppingBag size={14} className="text-white" />
+                    <span className="text-white font-black text-[10px] uppercase tracking-wider">Order Terbaru</span>
+                </div>
+                {getOrderStatusBadge(order.status)}
+            </div>
+
+            {/* Body */}
+            <div className="p-4 space-y-3">
+                {/* Order Number + Payment */}
+                <div className="flex items-start justify-between gap-2">
+                    <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">No. Order</p>
+                        <p className="font-black text-slate-800 text-[12px]">#{order.order_number}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">Pembayaran</p>
+                        <div className="flex items-center gap-1">
+                            <CreditCard size={10} className="text-slate-500" />
+                            <p className="font-bold text-slate-700 text-[10px] uppercase">{order.payment_method ?? '-'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Items Summary */}
+                {order.items_summary && order.items_summary.length > 0 && (
+                    <div className="rounded-xl bg-white border border-slate-100 divide-y divide-slate-50">
+                        {order.items_summary.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between px-3 py-2">
+                                <div className="flex items-center gap-2">
+                                    <Package size={11} className="text-indigo-400 flex-shrink-0" />
+                                    <p className="text-[10px] font-semibold text-slate-700 truncate max-w-[130px]">{item.name}</p>
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                    <p className="text-[9px] text-slate-400">x{item.qty}</p>
+                                    <p className="text-[10px] font-bold text-slate-700">{formatCurrency(item.price)}</p>
+                                </div>
+                            </div>
+                        ))}
+                        {order.items_count > 3 && (
+                            <p className="px-3 py-1.5 text-[9px] font-bold text-slate-400 text-center">
+                                +{order.items_count - 3} item lainnya
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {/* Total + Action */}
+                <div className="flex items-center justify-between pt-1">
+                    <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">Total</p>
+                        <p className="font-black text-indigo-700 text-[14px]">{formatCurrency(order.total_price)}</p>
+                    </div>
+                    <Link
+                        href={route('admin.orders.show', order.id)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wide transition-all active:scale-95 shadow-sm"
+                    >
+                        <ExternalLink size={12} />
+                        Lihat Order
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default function MessagesIndex() {
@@ -55,27 +148,23 @@ export default function MessagesIndex() {
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success && result.messages && result.messages.length > 0) {
-                        // Update messages dengan smart merge
                         setMessages(prevMessages => {
                             return result.messages.map(newMsg => {
                                 const existingMsg = prevMessages.find(m => m.id === newMsg.id);
                                 if (existingMsg) {
-                                    // Merge replies jika ada perubahan
                                     return {
                                         ...existingMsg,
                                         ...newMsg,
-                                        messages: newMsg.messages // Always update messages array
+                                        messages: newMsg.messages
                                     };
                                 }
                                 return newMsg;
                             });
                         });
                         
-                        // If current selected chat is updated, refresh it
                         if (selectedChat) {
                             const updated = result.messages.find(m => m.id === selectedChat);
                             if (updated) {
-                                // Keep selection valid if chat still exists
                                 setSelectedChat(selectedChat);
                             }
                         }
@@ -86,7 +175,7 @@ export default function MessagesIndex() {
             }
         };
 
-        const interval = setInterval(pollMessages, 2000); // Poll setiap 2 detik untuk real-time
+        const interval = setInterval(pollMessages, 2000);
         return () => clearInterval(interval);
     }, [selectedChat]);
 
@@ -112,8 +201,6 @@ export default function MessagesIndex() {
             post(route('admin.messages.store', activeChat.id), {
                 onSuccess: () => {
                     setData('reply', '');
-                    // Don't reload - let polling handle it
-                    // Just keep the chat selected and let polling update messages
                 }
             });
         }
@@ -124,7 +211,6 @@ export default function MessagesIndex() {
             post(route('admin.messages.close', activeChat.id), {
                 onSuccess: () => {
                     setSelectedChat(null);
-                    // Don't reload - let polling handle it
                 }
             });
         }
@@ -176,7 +262,6 @@ export default function MessagesIndex() {
                         ) : (
                             <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
                                 {messages.map((chat) => {
-                                    // Count unread customer messages (from polling updates)
                                     const unreadCount = chat.messages?.filter(m => 
                                         m.sender === 'customer' && !m.is_read
                                     ).length || 0;
@@ -197,11 +282,18 @@ export default function MessagesIndex() {
                                                 <p className="text-slate-600 text-[10px] font-medium mt-1 line-clamp-1">{chat.last_message}</p>
                                                 <p className="text-slate-400 text-[9px] font-bold mt-2">{chat.customer_email}</p>
                                             </div>
-                                            {unreadCount > 0 && (
-                                                <span className="flex-shrink-0 w-5 h-5 bg-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-pulse">
-                                                    {unreadCount}
-                                                </span>
-                                            )}
+                                            <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                                                {unreadCount > 0 && (
+                                                    <span className="w-5 h-5 bg-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-pulse">
+                                                        {unreadCount}
+                                                    </span>
+                                                )}
+                                                {chat.order && (
+                                                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-indigo-100 text-indigo-600 rounded-full text-[8px] font-black">
+                                                        <ShoppingBag size={9} /> Order
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                         <p className="text-slate-400 text-[9px] font-bold mt-2">{chat.timestamp}</p>
                                     </button>
@@ -236,28 +328,33 @@ export default function MessagesIndex() {
                             </div>
 
                             {/* Messages Area */}
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-slate-50 to-white custom-scrollbar">
-                                {activeChat.messages && activeChat.messages.length > 0 ? (
-                                    activeChat.messages.map((msg) => (
-                                        <div
-                                            key={msg.id}
-                                            className={`flex ${msg.sender === 'customer' ? 'justify-start' : 'justify-end'} animate-in fade-in slide-in-from-bottom-2`}
-                                        >
-                                            <div className={`max-w-xs px-4 py-3 rounded-2xl ${
-                                                msg.sender === 'customer'
-                                                    ? 'bg-slate-100 text-slate-800 rounded-tl-none'
-                                                    : 'bg-blue-600 text-white rounded-tr-none'
-                                            }`}>
-                                                <p className="text-[12px] font-medium">{msg.text}</p>
-                                                <p className={`text-[9px] font-bold mt-1 ${msg.sender === 'customer' ? 'text-slate-400' : 'text-blue-100'}`}>
-                                                    <TimeDisplay timestamp={msg.timestamp || msg.created_at} />
-                                                </p>
+                            <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50 to-white custom-scrollbar">
+                                {/* Order Card — Admin View */}
+                                <AdminOrderCard order={activeChat.order} />
+
+                                <div className="px-6 pb-6 space-y-4">
+                                    {activeChat.messages && activeChat.messages.length > 0 ? (
+                                        activeChat.messages.map((msg) => (
+                                            <div
+                                                key={msg.id}
+                                                className={`flex ${msg.sender === 'customer' ? 'justify-start' : 'justify-end'} animate-in fade-in slide-in-from-bottom-2`}
+                                            >
+                                                <div className={`max-w-xs px-4 py-3 rounded-2xl ${
+                                                    msg.sender === 'customer'
+                                                        ? 'bg-slate-100 text-slate-800 rounded-tl-none'
+                                                        : 'bg-blue-600 text-white rounded-tr-none'
+                                                }`}>
+                                                    <p className="text-[12px] font-medium">{msg.text}</p>
+                                                    <p className={`text-[9px] font-bold mt-1 ${msg.sender === 'customer' ? 'text-slate-400' : 'text-blue-100'}`}>
+                                                        <TimeDisplay timestamp={msg.timestamp || msg.created_at} />
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-slate-400 text-[10px] font-bold text-center">Belum ada pesan</p>
-                                )}
+                                        ))
+                                    ) : (
+                                        <p className="text-slate-400 text-[10px] font-bold text-center">Belum ada pesan</p>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Input Area */}

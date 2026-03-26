@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Message;
+use App\Models\Order;
 use App\Models\MessageReply;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,6 +44,28 @@ class MessageController extends Controller
                     ];
                 }))->sortBy('created_at')->values();
 
+                // Ambil order terbaru milik user
+                $latestOrder = Order::where('user_id', $message->customer_id)
+                    ->with('items.product')
+                    ->latest()
+                    ->first();
+                $order = null;
+                if ($latestOrder) {
+                    $order = [
+                        'id' => $latestOrder->id,
+                        'order_number' => $latestOrder->order_number,
+                        'status' => $latestOrder->status,
+                        'total_price' => $latestOrder->total_price,
+                        'payment_method' => $latestOrder->payment_method,
+                        'items_count' => $latestOrder->items->count(),
+                        'items_summary' => $latestOrder->items->take(3)->map(fn($item) => [
+                            'name' => $item->product->name ?? 'Produk',
+                            'qty' => $item->quantity,
+                            'price' => $item->price,
+                        ])->toArray(),
+                    ];
+                }
+
                 return [
                     'id' => $message->id,
                     'customer_id' => $message->customer_id,
@@ -52,7 +75,8 @@ class MessageController extends Controller
                     'last_message' => $message->message,
                     'timestamp' => $message->created_at->diffForHumans(),
                     'unread' => $message->replies->where('sender', 'admin')->where('is_read', false)->count(),
-                    'messages' => $allMessages->toArray()
+                    'messages' => $allMessages->toArray(),
+                    'order' => $order,
                 ];
             });
 
@@ -148,6 +172,28 @@ class MessageController extends Controller
                     ];
                 }))->sortBy('created_at')->values();
 
+                // Ambil order terbaru milik user
+                $latestOrder = Order::where('user_id', $message->customer_id)
+                    ->with('items.product')
+                    ->latest()
+                    ->first();
+                $order = null;
+                if ($latestOrder) {
+                    $order = [
+                        'id' => $latestOrder->id,
+                        'order_number' => $latestOrder->order_number,
+                        'status' => $latestOrder->status,
+                        'total_price' => $latestOrder->total_price,
+                        'payment_method' => $latestOrder->payment_method,
+                        'items_count' => $latestOrder->items->count(),
+                        'items_summary' => $latestOrder->items->take(3)->map(fn($item) => [
+                            'name' => $item->product->name ?? 'Produk',
+                            'qty' => $item->quantity,
+                            'price' => $item->price,
+                        ])->toArray(),
+                    ];
+                }
+
                 return [
                     'id' => $message->id,
                     'customer_id' => $message->customer_id,
@@ -157,7 +203,8 @@ class MessageController extends Controller
                     'last_message' => $message->message,
                     'timestamp' => $message->created_at->diffForHumans(),
                     'unread' => $message->replies->where('sender', 'admin')->where('is_read', false)->count(),
-                    'messages' => $allMessages->toArray()
+                    'messages' => $allMessages->toArray(),
+                    'order' => $order,
                 ];
             });
 
