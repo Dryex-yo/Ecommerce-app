@@ -1,0 +1,7 @@
+{
+    "version": 2,
+    "framework": "vite",
+    "outputDirectory": "public",
+    "installCommand": "composer install --no-dev && npm install",
+    "buildCommand": "npm run build"
+}
