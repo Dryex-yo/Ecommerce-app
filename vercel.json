@@ -1,7 +1,18 @@
 {
-    "version": 2,
-    "framework": "vite",
-    "outputDirectory": "public",
-    "installCommand": "composer install --no-dev && npm install",
-    "buildCommand": "npm run build"
+  "version": 2,
+  "functions": {
+    "api/*.php": {
+      "runtime": "vercel-php@0.7.5"
+    }
+  },
+  "routes": [
+    {
+      "src": "/build/(.*)",
+      "dest": "/public/build/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
+  ]
 }
