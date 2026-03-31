@@ -295,10 +295,12 @@ export default function Welcome({ auth, products }) {
                     </div>
 
                     {/* Scroll Indicator */}
-                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-                        <div className="flex flex-col items-center gap-2 text-slate-400">
-                            <p className="text-xs font-semibold tracking-widest uppercase">Scroll to explore</p>
-                            <ChevronRight size={20} className="rotate-90" />
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity duration-300">
+                        <p className="text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase text-slate-500">
+                            Scroll to explore
+                        </p>
+                        <div className="animate-bounce">
+                            <ChevronRight size={18} className="rotate-90 text-slate-400" />
                         </div>
                     </div>
                 </header>
